@@ -1,13 +1,13 @@
 # Git Workflow Tutorial for Team
 
-## 1. Branches
+## 1. Branches 🌿
 - **main**: Nhánh chính, ổn định, chỉ merge code đã review & test xong từ các feature branch.
 - **feature/architecture-data**: Branch làm việc của Scope 1, bao gồm kiến trúc hệ thống, Docker, cơ sở dữ liệu, object storage, pipeline ingestion, ...
 - **feature/data-preprocessing**: Branch làm việc của Scope 2, bao gồm thu thập dữ liệu, data validation, data cleaning, schema, preprocessing, EDA, handle text data, ...
 - **feature/feature-engineering**: Branch làm việc của Scope 3, bao gồm feature engineering, tạo embeddings, đánh giá chất lượng features, ...
 - **feature/recommendation-engine**: Branch làm việc chính của Scope 4, bao gồm xây dựng và tinh chỉnh mô hình recommendation, huấn luyện, đánh giá model, ...
 
-## 2. Git Command Dictionary
+## 2. Git Command Dictionary 📖
 **Clone repo về local**  
 
 ```bash
