@@ -1,0 +1,38 @@
+services:
+  # Jupyter Notebook
+  notebook:
+    build: ./notebooks
+    container_name: jupyter-notebook
+    volumes:
+      - .:/workspace
+    ports:
+      - "8888:8888"
+
+  # Postgres
+  postgres:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  # Postgres UI
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: postgres_ui
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_ALLOW_SAVE_PASSWORD: "True"
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
