@@ -34,5 +34,26 @@ services:
     depends_on:
       - postgres
 
+  # Airflow 
+  airflow:
+    build: ./pipelines
+    container_name: airflow
+    volumes:
+     - ./pipelines/dags:/opt/airflow/dags
+     - ./src:/opt/airflow/src
+    environment:
+     - PYTHONPATH=/opt/airflow/src
+    ports:
+     - "8080:8080"
+    command: >
+      bash -c '(airflow db init && 
+      airflow users create 
+      --username admin 
+      --password admin 
+      --firstname admin 
+      --lastname admin 
+      --role Admin
+      --email admin@gmail.com);
+      airflow webserver & airflow scheduler'
 volumes:
   postgres_data:
