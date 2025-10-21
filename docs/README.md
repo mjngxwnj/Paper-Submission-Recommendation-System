@@ -10,7 +10,7 @@
 
 
 
-## 2. Feature Integration Workflow
+## 2. Feature Integration Workflow 🔄
 ![feature_integration_workflow](https://github.com/mjngxwnj/Paper-Submission-Recommendation-System/blob/main/docs/images/feature_integration_workflow.png)  
 
 **Mũi tên xanh**: Push code, tức đẩy code từ nhánh feature của mình vào nhánh phát triển chung là "dev". Thao tác mặc định là dùng PR (Pull Request).  
