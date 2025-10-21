@@ -1,1 +1,6 @@
 __pycache__/
+
+
+
+#ignore volumes
+volumes/
