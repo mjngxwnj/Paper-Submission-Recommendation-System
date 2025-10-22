@@ -1,0 +1,37 @@
+# ------------------------------------------------------------------------------------------------
+# CI Workflow: Pull requests -> dev
+# ------------------------------------------------------------------------------------------------
+# Trigger: Runs on pull requests targetting 'dev' branch.
+#
+# Purpose: Ensure code quality and functionality before merging. It includes:
+# - Linting for code (Flake8): code quality, unuse function or variable, too long code line,...
+# - Feature-specific tests for branches:
+#   + 'feature/architecture-data': Tests docker build, container, configurations, infrastrucutre,...
+#   + 'feature/data-preprocessing': To be continued ..
+#   + 'feature/feature-engineering': To be continued ...
+#   + 'feature/recommendation-engine': To be continued ...
+# ------------------------------------------------------------------------------------------------
+
+name: CI for PR to Dev
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  architecture-data-tests:
+    if: startsWith(github.event.pull_request.head.ref, 'feature/architecture-data')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start Services
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+      - name: Stop Services
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml down
