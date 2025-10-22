@@ -1,6 +1,8 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from data_ingestion.db import b
+from datetime import datetime
+
+from data_ingestion.loaders.test import test_mongo
 
 default_args = {
     "owner": "airflow",
@@ -10,15 +12,14 @@ default_args = {
 with DAG(
     "test",
     default_args = default_args,
-
+    start_date=datetime(2025, 10, 22),
+    schedule_interval=None,
+    catchup=False
 ) as dag:
-    
-    def task_run_a():
-        b.b()
-    
+
     test_task = PythonOperator(
         task_id = "test",
-        python_callable = task_run_a
+        python_callable = test_mongo
     )
 
-    task_run_a
+

@@ -13,6 +13,7 @@ selenium==4.25.0
 # === API & Database ===
 pyalex
 psycopg2-binary==2.9.7
+pymongo>=4.6
 
 # # === NLP & text processing ===
 # scikit-learn==1.5.2
