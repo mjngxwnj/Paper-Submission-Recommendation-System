@@ -1,6 +1,6 @@
 import pymongo
 from pymongo import MongoClient
-
+import logging
 
 class MongoDBConnector:
     def __init__(self, host: str = 'localhost', port: int = 27017, 
@@ -37,22 +37,32 @@ class MongoDBConnector:
 
         if self._username and self._password:
             uri = f"mongodb://{self._username}:{self._password}@{self._host}:{self._port}/{self._db_name}?authSource=admin"
-            self._client = MongoClient(uri)
+
+            self._client = MongoClient(
+                uri,
+                serverSelectionTimeoutMS = 5000
+            )
 
         else:
-            self._client = MongoClient(self._host, self._port)
+
+            self._client = MongoClient(
+                self._host,
+                self._port,
+                serverSelectionTimeoutMS = 5000
+            )
+
 
         try:
             #Ping MongoDB to ensure it's reachable
             self._client.admin.command('ping')
             self._db = self._client[self._db_name]
 
-            print(f"[INFO] Successfully connected to MongoDB: {self._host}:{self._port}, database: {self._db_name}")
+            logging.info(f"Successfully connected to MongoDB: {self._host}:{self._port}, database: {self._db_name}")
 
             return self._db
 
         except pymongo.errors.ConnectionFailure as e:
-            print(f"[ERROR] Cannot connect to MongoDB: {e}")
+            logging.error(f" Cannot connect to MongoDB: {e}")
 
             self._client = None
             self._db = None
@@ -68,10 +78,10 @@ class MongoDBConnector:
         if self._client:
             self._client.close()
 
-            print(f"[INFO] Connection closed: {self._host}:{self._port}, database: {self._db_name}")
+            logging.info(f"Connection closed: {self._host}:{self._port}, database: {self._db_name}")
 
             self._client = None
             self._db = None
 
         else:
-            print("[WARN] No active connection to close")
+            logging.info("No active connection to close")

@@ -1,8 +1,18 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from data_ingestion.scrapers import BaseScraper, SourceAScraper, SourceBScraper
+from data_ingestion.loaders import BaseLoader, RawPaperLoader
 from datetime import datetime
 
-from data_ingestion.loaders.test import test_mongo
+def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoader],
+                src: str) -> None:
+
+    scraper : BaseScraper = scraper_default()
+    loader : BaseLoader = loader_default(src)
+
+    data = scraper.fetch_data()
+    loader.load(data)
+
 
 default_args = {
     "owner": "airflow",
@@ -17,9 +27,15 @@ with DAG(
     catchup=False
 ) as dag:
 
-    test_task = PythonOperator(
-        task_id = "test",
-        python_callable = test_mongo
+    scrape_sourceA_task = PythonOperator(
+        task_id = "scrape_sourceA_task",
+        python_callable = run_scraper,
+        op_args = [SourceAScraper, RawPaperLoader, "srcA"]
     )
 
+    scrape_sourceB_task = PythonOperator(
+        task_id = "scrape_sourceB_task",
+        python_callable = run_scraper,
+        op_args = [SourceBScraper, RawPaperLoader, "srcB"]
+    )
 
