@@ -1,23 +1,30 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from database.mongodb.connection import MongoDBConnector
+from integration.airflow import get_mongo_conn
 from data_ingestion.scrapers import BaseScraper, SourceAScraper, SourceBScraper
 from data_ingestion.loaders import BaseLoader, RawPaperLoader
 from datetime import datetime
+import time
+import logging
 
 def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoader],
                 src: str) -> None:
+    mongo_client = MongoDBConnector(**get_mongo_conn())
+    db = mongo_client.connect()
 
     scraper : BaseScraper = scraper_default()
-    loader : BaseLoader = loader_default(src)
+    loader : BaseLoader = loader_default(db, src)
 
     data = scraper.fetch_data()
     loader.load(data)
 
+    mongo_client.close()
+
 
 default_args = {
     "owner": "airflow",
-    "depends_on_past": False,
-}
+    "depends_on_past": False, }
 
 with DAG(
     "test",

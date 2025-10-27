@@ -1,9 +1,10 @@
 import pymongo
 from pymongo import MongoClient
 import logging
+import time
 
 class MongoDBConnector:
-    def __init__(self, host: str = 'localhost', port: int = 27017, 
+    def __init__(self, host: str = 'localhost', port: int = 27017,
                        db_name: str = 'default', username: str = None,
                        password: str = None):
         """
@@ -34,7 +35,6 @@ class MongoDBConnector:
             pymongo.database.Database: pymongo database object
 
         """
-
         if self._username and self._password:
             uri = f"mongodb://{self._username}:{self._password}@{self._host}:{self._port}/{self._db_name}?authSource=admin"
 
@@ -54,10 +54,13 @@ class MongoDBConnector:
 
         try:
             #Ping MongoDB to ensure it's reachable
+            start_time = time.time()
             self._client.admin.command('ping')
             self._db = self._client[self._db_name]
+            end_time = time.time()
 
-            logging.info(f"Successfully connected to MongoDB: {self._host}:{self._port}, database: {self._db_name}")
+            logging.info(f"Connected to MongoDB {self._host}:{self._port}, "
+                        f"database: {self._db_name} (connect took {end_time - start_time:.4f}s)")
 
             return self._db
 

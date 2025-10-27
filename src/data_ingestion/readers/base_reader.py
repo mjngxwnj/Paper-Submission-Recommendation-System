@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from database.mongodb.connection import MongoDBConnector
+from integration.airflow.conn_config import get_mongo_conn
 import pymongo
 
-class BaseLoader(ABC):
+class BaseReader(ABC):
     def __init__(self, db: pymongo.database.Database, src: str):
         """
         Base class for MongoDB data loaders.
@@ -14,14 +16,13 @@ class BaseLoader(ABC):
         self._db = db
         self._src = src
 
-
     @abstractmethod
-    def load(self, data: list[dict]) -> None:
+    def read(self) -> list[dict]:
         """
-        Abstract method to load data into MongoDB.
+        Abstract method to read data from MongoDB.
 
         Args:
-            data (list[dict]): List of documents to be inserted or updated.
+            data (list[dict]): List of documents to be read.
         """
 
         pass

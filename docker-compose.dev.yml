@@ -1,6 +1,7 @@
 services:
   # Jupyter Notebook
   notebook:
+    container_name: notebook
     build: ./notebooks
     ports:
       - "8888:8888"
@@ -9,6 +10,7 @@ services:
 
   # Postgres
   postgres:
+    container_name: postgres
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -20,6 +22,7 @@ services:
 
   # Postgres UI
   pgadmin:
+    container_name: postgres-ui
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -29,6 +32,7 @@ services:
 
   # MongoDB
   mongodb:
+    container_name: mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
@@ -39,6 +43,7 @@ services:
 
   # MongoDB UI
   mongodb_ui:
+    container_name: mongodb-ui
     environment:
       ME_CONFIG_BASICAUTH_USERNAME: admin
       ME_CONFIG_BASICAUTH_PASSWORD: admin
@@ -71,6 +76,7 @@ services:
     command: minio server /minio_data --console-address ":9001"
 
   milvus:
+    container_name: milvus
     command: ["milvus", "run", "standalone"]
     security_opt:
       - seccomp:unconfined
@@ -86,6 +92,7 @@ services:
 
   # Airflow
   airflow:
+    container_name: airflow
     volumes:
       - ./pipelines/dags:/opt/airflow/dags
       - ./src:/opt/airflow/src

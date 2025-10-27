@@ -68,15 +68,45 @@ def insert_many(collection: Collection, documents: list[dict]) -> bool:
     try:
         result = collection.insert_many(documents)
         if result.acknowledged:
-            logging.info(f"Inserted {len(result.inserted_ids)} documents successfully.")
+            logging.info(f"Inserted {len(result.inserted_ids)} documents into "
+                         f"collection '{collection.name}' successfully.")
 
             return True
 
-        logging.warning("Insert_many not acknowledged by MongoDB.")
+        logging.warning(f"Insert_many not acknowledged by MongoDB for collection '{collection.name}'.")
         return False
 
     except PyMongoError as e:
-        logging.error(f"Failed to insert_many: {e}")
+        logging.error(f"Failed to insert_many into collection '{collection.name}': {e}")
+        raise
+
+
+def read(collection: Collection, filter: dict | None = None) -> list[dict]:
+    """
+    Read documents from a MongoDB collection.
+
+    Args:
+        collection (Collection): MongoDB collection object to read from.
+        filter (dict, optional): MongoDB filter query. Defaults to None (all documents).
+
+    Returns:
+        list[dict]: List of documents retrieved.
+    """
+
+    validate_type(collection, collection, "collection")
+    if filter is not None:
+        validate_type(filter, dict, "filter")
+
+    try:
+        cursor = collection.find(filter or {})
+
+        documents = list(cursor)
+        logging.info(f"Read {len(documents)} documents from collection '{collection.name}' ")
+
+        return documents
+
+    except PyMongoError as e:
+        logging.error(f"Failed to read from collection '{collection.name}': {e}")
         raise
 
 
