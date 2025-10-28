@@ -1,0 +1,112 @@
+services:
+  # Jupyter Notebook
+  notebook:
+    container_name: notebook
+    build: ./notebooks
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/workspace
+
+  # Postgres
+  postgres:
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./volumes/postgres_data:/var/lib/postgresql/data
+
+  # Postgres UI
+  pgadmin:
+    container_name: postgres-ui
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_ALLOW_SAVE_PASSWORD: "True"
+    ports:
+      - "5050:80"
+
+  # MongoDB
+  mongodb:
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./volumes/mongo_data:/data/db
+
+  # MongoDB UI
+  mongodb_ui:
+    container_name: mongodb-ui
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin
+      ME_CONFIG_MONGODB_SERVER: mongodb
+    ports:
+      - "8081:8081"
+
+  # Milvus
+  etcd:
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - ./volumes/etcd:/etcd
+    command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+
+  minio:
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./volumes/minio:/minio_data
+    command: minio server /minio_data --console-address ":9001"
+
+  milvus:
+    container_name: milvus
+    command: ["milvus", "run", "standalone"]
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+      MQ_TYPE: woodpecker
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    volumes:
+      - ./volumes/milvus:/var/lib/milvus
+
+  # Airflow
+  airflow:
+    container_name: airflow
+    volumes:
+      - ./pipelines/dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+    environment:
+      PYTHONPATH: /opt/airflow/src
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c '(airflow db init && 
+      airflow users create 
+      --username admin 
+      --password admin 
+      --firstname admin 
+      --lastname admin 
+      --role Admin
+      --email admin@gmail.com);
+      airflow webserver & airflow scheduler'
