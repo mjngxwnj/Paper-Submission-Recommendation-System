@@ -4,17 +4,6 @@ from typing import Any
 
 
 class RawPaperLoader(BaseLoader):
-    def __init__(self, db, src):
-        """
-        Initialize RawPaperLoader with MongoDB connection & target collection.
-
-        Args:
-            collection_name (str): Target collection for raw data storage.
-        """
-
-        super().__init__(db, src)
-        self._collection = self._db[f"raw_papers_{src}"]
-
 
     def load(self, data: list[dict[str, Any]]) -> None:
         """
@@ -22,9 +11,4 @@ class RawPaperLoader(BaseLoader):
         """
 
         insert_many(self._collection, data)
-
-
-
-
-
 

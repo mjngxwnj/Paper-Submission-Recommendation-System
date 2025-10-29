@@ -12,7 +12,7 @@ class BaseLoader(ABC):
         """
 
         self._db = db
-        self._src = src
+        self._collection = self._db[src]
 
 
     @abstractmethod

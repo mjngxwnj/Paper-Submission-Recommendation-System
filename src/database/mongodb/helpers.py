@@ -1,7 +1,8 @@
 from pymongo.collection import Collection
-from pymongo import UpdateOne
+from pymongo import ASCENDING
 from pymongo.errors import PyMongoError
 import logging
+
 
 
 def validate_type(value, expected_type, name: str = 'variable'):
@@ -109,4 +110,50 @@ def read(collection: Collection, filter: dict | None = None) -> list[dict]:
         logging.error(f"Failed to read from collection '{collection.name}': {e}")
         raise
 
+
+def aggregate(collection: Collection, pipeline: list[dict]):
+    """
+    Run an aggregation pipeline on a MongoDB collection.
+
+    Args:
+        collection (Collection): The MongoDB collection to run the pipeline on.
+        pipeline (list[dict]): List of aggregation stages.
+    """
+
+    validate_type(collection, Collection, "collectin")
+    validate_type(pipeline, list, "pipeline")
+
+    try:
+        logging.info(f"Running aggregation on collection {collection.name}...")
+        collection.aggregate(pipeline, allowDiskUse = True)
+        logging.info(f"Aggregation completed. Data has been upserted successfully from {collection.name}.")
+
+    except Exception as e:
+        logging.error(f"Failed to aggregate {collection.name}: {e}")
+        raise
+
+
+def ensure_index(collection: Collection, field: str | None = None, unique: bool = True):
+    """
+    Ensure that an index exists on a specified field in a MongoDB Collection.
+
+    Args:
+        collection (Collection): The MongoDB collection object.
+        field (str): The field on which to create the index.
+        unique (bool): Whether the index should enforce uniqueness. Default is True.
+    """
+
+    validate_type(collection, Collection, "collection")
+    validate_type(field, str, "field")
+    validate_type(unique, bool, "unique")
+
+    indexes = collection.index_information()
+
+    for index in indexes.values():
+        if index['key'][0][0] == field and index.get('unique', False) == unique:
+            logging.info(f"Index already exists on '{field}' in collection '{collection.name}'.")
+            return
+
+    collection.create_index([(field, ASCENDING)], unique = unique)
+    logging.info(f"Created {'unique ' if unique else ''}index on '{field}' in collection '{collection.name}'.")
 
