@@ -1,0 +1,239 @@
+[
+  {
+    "title": [
+      "Behavioural strategies in weighted boolean games"
+    ],
+    "creator": [
+      "Han, D",
+      "Harrenstein, P",
+      "Nugent, S",
+      "Philpott, J",
+      "Wooldridge, M"
+    ],
+    "subject": null,
+    "description": [
+      "The adoption of game-theoretic models throughout artificial intelligence and computer science has prompted extensive research into algorithms and heuristics for computing game theoretic solution concepts, of which mixed strategy Nash equilibrium is one of the most prominent examples. This paper considers the issues surrounding the computation of mixed strategy Nash equilibria in weighted Boolean games: a natural, compact, and expressive class of games that has been widely studied in the artificial intelligence and multi-agent systems communities. In a weighted Boolean game, each player pursues the satisfaction of a weighted set of propositional logic goals by selecting a truth assignment for a set of propositional variables under its unique control; players aim to choose so as to maximise the total weight of formulas satisfied. Unfortunately, the obvious representation of a mixed strategy in weighted Boolean games is of size exponential in the number of variables a player controls. Weighted Boolean games, however, also allow for randomisation at the level of the propositional variables, which gives rise to a more compact model of randomised strategies, which we call behavioural strategies. We provide a detailed theoretical analysis of Nash equilibria in behavioural strategies. Two results are significant from an algorithmic point of view: (a) behavioural equilibria correspond to mixed and correlated equilibria that satisfy a specific independence property; and (b) they allow for exponentially fewer supports than mixed equilibria. These findings suggest two ways in which one can leverage existing algorithms and heuristics for computing mixed equilibria to find behavioural equilibria. The first is a naive approach, in which we search for mixed equilibria and check whether they satisfy the aforesaid independence property. The second is more sophisticated and is based on support enumeration. In an additional third approach, which is inspired by the linear programming characterisation of correlated equilibria, we use numerical methods to find behavioural equilibria directly. In an extensive experimental study, we compare the performance of these approaches—with and without attendant heuristics—for finding some and all behavioural equilibria of a weighted Boolean game."
+    ],
+    "publisher": [
+      "Elsevier"
+    ],
+    "date": [
+      "2020"
+    ],
+    "identifier": [
+      "uuid:1c3a9727-edeb-411b-b7bb-ee4564691116"
+    ],
+    "doi": null
+  },
+  {
+    "title": [
+      "Humans in the loop: incorporating expert and crowdsourced knowledge for predictions using survey data"
+    ],
+    "creator": [
+      "Filippova, A",
+      "Gilroy, C",
+      "Kashyap, R",
+      "Kirchner, A",
+      "Morgan, A",
+      "Polimis, K",
+      "Usmani, A",
+      "Wang, T"
+    ],
+    "subject": null,
+    "description": [
+      "Survey datasets are often wider than they are long. This high ratio of variables to observations raises concerns about overfitting during prediction, making informed variable selection important. Recent applications in computer science have sought to incorporate human knowledge into machine learning methods to address these problems. We implement such a “human-in-the-loop” approach in the Fragile Families Challenge. We use surveys to elicit knowledge from experts and laypeople about the importance of different variables to different outcomes. This strategy gives us the option to subset the data before prediction or to incorporate human knowledge as scores in prediction models, or both together. We find that human intervention is not obviously helpful. Human-informed subsetting reduces predictive performance, and considered alone, approaches incorporating scores perform marginally worse than approaches which do not. However, incorporating human knowledge may still improve predictive performance, and future research should consider new ways of doing so."
+    ],
+    "publisher": [
+      "SAGE Publications"
+    ],
+    "date": [
+      "2019"
+    ],
+    "identifier": [
+      "uuid:1d64c354-2c85-474d-9e94-b2e47d00df35"
+    ],
+    "doi": null
+  },
+  {
+    "title": [
+      "A hierarchy of quantum semantics"
+    ],
+    "creator": [
+      "Perdrix, S"
+    ],
+    "subject": [
+      "Computer science (mathematics)"
+    ],
+    "description": [
+      "<p>Several domains [S. Abramsky. A Cook&amp;apos;s tour of a simple quantum programming language. <em>3rd International Symposium on Domain Theory, Xi'an, China</em>, May 2004; B. Coecke and K. Martin. A partial order on classical and quantum states. Technical report, PRG-RR-02-07, 2002; Ph. Jorrand and S. Perdrix. Towards a quantum calculus. In <em>To appear in Proceedings of the 4th International Workshop on Quantum Programming Languages, ENTCS</em>, 2006; P. Selinger. Towards a quantum programming language. <em>Mathematical Structures in Computer Science</em>, 14(4):527–586, 2004] can be used to define the semantics of quantum programs. Among them Abramsky [S. Abramsky. A Cook&amp;apos;s tour of a simple quantum programming language. <em>3rd International Symposium on Domain Theory, Xi&amp;apos;an, China</em>, May 2004] has introduced a semantics based on probabilistic power domains, whereas the one by Selinger [P. Selinger. Towards a quantum programming language. <em>Mathematical Structures in Computer Science</em>, 14(4):527–586, 2004] associates with every program a completely positive map. In this paper, we mainly introduce a semantical domain based on admissible transformations, i.e. multisets of linear operators. In order to establish a comparison with existing domains, we introduce a simple quantum imperative language (QIL), equipped with three different denotational semantics, called pure, observable, and admissible respectively. The pure semantics is a natural extension of probabilistic (classical) semantics and is similar to the semantics proposed by Abramsky [S. Abramsky. A Cook&amp;apos;s tour of a simple quantum programming language. <em>3rd International Symposium on Domain Theory, Xi&amp;apos;an, China</em>, May 2004]. The observable semantics, à la Selinger [P. Selinger. Towards a quantum programming language. <em>Mathematical Structures in Computer Science</em>, 14(4):527–586, 2004], associates with any program a superoperator over density matrices. Finally, we introduce an admissible semantics which associates with any program an admissible transformation. These semantics are not equivalent, but exact abstraction [P. Cousot. Types as abstract interpretations. In <em>POPL</em>, pages 316–331, 1997] or interpretation relations are established between them, leading to a hierarchy of quantum semantics.</p>"
+    ],
+    "publisher": [
+      "Elsevier"
+    ],
+    "date": [
+      "2008"
+    ],
+    "identifier": [
+      "uuid:1d7e4396-ee54-413b-bd15-89ac5971c33d"
+    ],
+    "doi": null
+  },
+  {
+    "title": [
+      "Data science for mental health: a UK perspective on a global challenge"
+    ],
+    "creator": [
+      "McIntosh, A",
+      "Stewart, R",
+      "John, A",
+      "Smith, D",
+      "Davis, K",
+      "Sudlow, C",
+      "Corvin, A",
+      "Nicodemus, K",
+      "Kingdon, D",
+      "Hassan, L",
+      "Hotopf, M",
+      "Lawrie, S",
+      "Russ, T",
+      "Geddes, J",
+      "Wolpert, M",
+      "Wölbert, E",
+      "Porteous, D"
+    ],
+    "subject": null,
+    "description": [
+      "Data science uses computer science and statistics to extract new knowledge from high-dimensional datasets (ie, those with many different variables and data types). Mental health research, diagnosis, and treatment could benefit from data science that uses cohort studies, genomics, and routine health-care and administrative data. The UK is well placed to trial these approaches through robust NHS-linked data science projects, such as the UK Biobank, Generation Scotland, and the Clinical Record Interactive Search (CRIS) programme. Data science has great potential as a low-cost, high-return catalyst for improved mental health recognition, understanding, support, and outcomes. Lessons learnt from such studies could have global implications."
+    ],
+    "publisher": [
+      "Elsevier"
+    ],
+    "date": [
+      "2016"
+    ],
+    "identifier": [
+      "uuid:1d9c8b98-ceaa-4333-ac8b-d3c6a5ae0e07"
+    ],
+    "doi": null
+  },
+  {
+    "title": [
+      "Type inference and strong static type checking for Promela"
+    ],
+    "creator": [
+      "Donaldson, A",
+      "Gay, S"
+    ],
+    "subject": [
+      "Computer science (mathematics)"
+    ],
+    "description": [
+      "<p>The Spin model checker and its specification language Promela have been used extensively in industry and academia to check the logical properties of distributed algorithms and protocols. Model checking with Spin involves reasoning about a system via an abstract Promela specification, thus the technique depends critically on the soundness of this specification. Promela includes a rich set of data types including first-class channels, but the language syntax restricts the declaration of channel types so that it is not generally possible to deduce the complete type of a channel directly from its declaration. We present the design and implementation of Etch, an enhanced type checker for Promela, which uses constraint-based type inference to perform strong type checking of Promela specifications, allowing static detection of errors that Spin would not detect until simulation/verification time, or that Spin may miss completely. We discuss theoretical and practical problems associated with designing a type system and type checker for an existing language, and formalise our approach using a Promela-like calculus. To handle subtyping between base types, we present an extension to a standard unification algorithm to solve a system of equality and subtyping constraints, based on bounded substitutions.</p>"
+    ],
+    "publisher": [
+      "Elsevier"
+    ],
+    "date": [
+      "2010"
+    ],
+    "identifier": [
+      "uuid:1da1baaf-85d8-4d30-8f57-b3bc99081969"
+    ],
+    "doi": null
+  },
+  {
+    "title": [
+      "Incremental update of datalog materialisation : the backward/forward algorithm"
+    ],
+    "creator": [
+      "Motik, B",
+      "Nenov, Y",
+      "Piro, R",
+      "Horrocks, I"
+    ],
+    "subject": [
+      "Databases",
+      "Artificial Intelligence",
+      "Computer Science",
+      "Knowledge Representation and Reasoning"
+    ],
+    "description": [
+      "<p>Datalog-based systems often materialise all consequences of a datalog program and the data, allowing users’ queries to be evaluated directly in the materialisation. This process, however, can be computationally intensive, so most systems update the materialisation incrementally when input data changes. We argue that existing solutions, such as the well-known Delete/Rederive (DRed) algorithm, can be inefficient in cases when facts have many alternate derivations. As a possible remedy, we propose a novel Backward/Forward (B/F) algorithm that tries to reduce the amount of work by a combination of backward and forward chaining. In our evaluation, the B/F algorithm was several orders of magnitude more efficient than the DRed algorithm on some inputs, and it was never significantly less efficient.</p>"
+    ],
+    "publisher": [
+      "Association for the Advancement of Artificial Intelligence"
+    ],
+    "date": [
+      "2015"
+    ],
+    "identifier": [
+      "uuid:1da9041e-030d-4808-85d2-29b4bd6a029b"
+    ],
+    "doi": null
+  },
+  {
+    "title": [
+      "On an interpretation of safe recursion in light affine logic"
+    ],
+    "creator": [
+      "Murawski, A",
+      "Ong, C"
+    ],
+    "subject": [
+      "Computer science (mathematics)"
+    ],
+    "description": [
+      "We introduce a subalgebra <em>BC</em><sup>−</sup> of Bellantoni and Cook's safe-recursion function algebra <em>BC</em>. Functions of the subalgebra have safe arguments that are non-contractible (i.e non-duplicable). We propose a definition of safe and normal variables in light affine logic (LAL), and show that <em>BC</em><sup>−</sup> is the largest subalgebra that is interpretable in LAL, relative to that definition. Though <em>BC</em><sup>−</sup> itself is not PF complete, there are extensions of it (by additional schemes for defining functions with safe arguments) that are, and are still <em>interpretable</em> in LAL and so preserve PF closure. We focus on one such which is <em>BC</em><sup>−</sup> augmented by a definition-by-cases construct and a restricted form of definition-by-recursion scheme over <em>safe</em> arguments. As a corollary we obtain a new proof of the PF completeness of LAL."
+    ],
+    "publisher": [
+      "Elsevier"
+    ],
+    "date": [
+      "2004"
+    ],
+    "identifier": [
+      "uuid:1ecaf989-a3be-4dd6-9255-c5f3679209e4"
+    ],
+    "doi": null
+  },
+  {
+    "title": [
+      "Modelling‚ abstraction‚ and computation in systems biology: A view from computer science"
+    ],
+    "creator": [
+      "Melham, T"
+    ],
+    "subject": null,
+    "description": null,
+    "publisher": null,
+    "date": [
+      "2015"
+    ],
+    "identifier": [
+      "uuid:21043f58-680e-46f7-b6c7-d7b8e690e657"
+    ],
+    "doi": null
+  },
+  {
+    "title": [
+      "Quicksort and Large Deviations."
+    ],
+    "creator": [
+      "McDiarmid, C"
+    ],
+    "subject": null,
+    "description": [
+      "Quicksort may be the most familiar and important randomised algorithm studied in computer science. It is well known that the expected number of comparisons on any input of n distinct keys is Θ(n ln n), and the probability of a large deviation above the expected value is very small. This probability was well estimated some time ago, with an ad-hoc proof: we shall revisit this result in the light of further work on concentration. © 2013 Springer-Verlag."
+    ],
+    "publisher": [
+      "Springer"
+    ],
+    "date": [
+      "2012"
+    ],
+    "identifier": [
+      "uuid:252e335b-84cc-4256-958f-491b86acf21e"
+    ],
+    "doi": null
+  }
+]
