@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from time import sleep
 from database.mongodb.helpers import aggregate, ensure_index
 import pymongo
 

@@ -14,6 +14,7 @@ def mongo_session():
 
     client = MongoDBConnector(**get_mongo_conn())
     db = client.connect()
+
     try:
         yield db
 
