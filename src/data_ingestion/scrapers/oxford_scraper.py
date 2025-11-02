@@ -88,7 +88,7 @@ class oxfordScraper(BaseScraper):
         page = 1
         total_records = []
         count_total = 0
-        max_page = 5
+        max_page = 1
         print("Starting ORA crawler")
         if token:
             print(f"Resuming from saved token: {token[:40]}...")
