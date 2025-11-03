@@ -1,4 +1,4 @@
-from data_ingestion.scrapers.base_scraper import BaseScraper
+from ingestion.scrapers.base_scraper import BaseScraper
 
 class SourceBScraper(BaseScraper):
     def __init__(self):

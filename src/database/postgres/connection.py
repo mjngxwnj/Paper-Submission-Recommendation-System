@@ -30,17 +30,18 @@ class PostgresConnector:
         self._conn = None
 
 
-    def connect(self):
+    def connect(self, db_name: str | None = None):
         """
         Connect to Postgres and return psycopg connection.
         """
 
+        target_db = db_name or self._db_name
         try:
             start_time = time.time()
             self._conn = psycopg.connect(
                 host = self._host,
                 port = self._port,
-                dbname = self._db_name,
+                dbname = target_db,
                 user = self._username,
                 password = self._password,
                 connect_timeout = self._connect_timeout
@@ -52,7 +53,7 @@ class PostgresConnector:
 
             logging.info(
                 f"Connected to PostgreSQL {self._host}:{self._port}, "
-                f"database: {self._db_name} (connect took {end_time - start_time:.4f}s)"
+                f"database: {target_db} (connect took {end_time - start_time:.4f}s)"
             )
 
             return self._conn
@@ -75,7 +76,7 @@ class PostgresConnector:
         if self._conn:
             self._conn.close()
 
-            logging.info(f"Connection closed: {self._host}:{self._port}, database: {self._db_name}")
+            logging.info(f"Connection closed: {self._host}:{self._port}")
 
             self._conn = None
 

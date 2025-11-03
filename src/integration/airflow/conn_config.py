@@ -44,10 +44,10 @@ def get_postgres_conn(conn_id: str = "postgres_default") -> dict:
 
     postgres_config = {
         "host": conn.host,
-        "port": conn.port or 5432,
-        "user": conn.login,
+        "port": conn.port,
+        "username": conn.login,
         "password": conn.password,
-        "dbname": conn.schema,
+        "db_name": conn.schema,
     }
 
     return postgres_config

@@ -4,24 +4,32 @@ from database.postgres.connection import PostgresConnector
 from integration.airflow import get_postgres_conn
 
 @contextmanager
-def postgres_session():
+def postgres_session(db_name: str | None = None, autocommit: bool = False):
     """
-    Context manager to manage Postgres connection.
+    Context manager to manage Postgres connection and cursor.
 
-    - Automatically calls PostgresConnector.
-    - Connect to DB and yields the conn cursor.
-    - Ensures connection is closed after use.
+    Args:
+        db_name (str | None): Database to connect. If None, use default from Airflow connection.
+        autocommit (bool): Whether to run in autocommit mode.
+            + True: each statement is committed immediately (need for create database).
+            + False: statements are in a transaction block, can rollback on error (safe for schema/table/insert).
     """
 
     pg = PostgresConnector(**get_postgres_conn())
-    conn = pg.connect()
-    cursor = conn.cursor()
+    conn = pg.connect(db_name)
+    conn.autocommit = autocommit
 
     try:
-        yield cursor
+        with conn.cursor() as cursor:
+            yield cursor
+
+        if not autocommit:
+            conn.commit()
 
     except Exception as e:
-        conn.rollback()
+        if not autocommit:
+            conn.rollback()
+
         logging.error(f"Transaction rolled back: {e}")
         raise
 
