@@ -22,8 +22,8 @@ class openAlexScraper(BaseScraper):
         config.max_retries = 3
         config.retry_backoff_factor = 0.1
         config.retry_http_codes = [429, 500, 503]  
-    def fetch_data(self,api_key:str = "",start_cursor = "*") -> list[dict]:
-        cursor = start_cursor
+    def fetch_data(self,api_key:str = "",checkpoint = "*") -> list[dict]:
+        cursor = checkpoint
         print(f"Crawling OpenAlex for field: {self.FIELD}")
 
         count_result = 0
