@@ -5,7 +5,6 @@ import json
 import time
 import os
 class oxfordScraper(BaseScraper):
-    CHECKPOINT_FILE = "ora_checkpoint.txt" # file lưu resumptionToken để resume 
     MAX_RETRIES = 3     # Số lần thử lại khi lỗi mạng
     DELAY = 20           # Giãn cách giữa các lần gọi (giây)
     TIMEOUT = 120  
@@ -24,16 +23,6 @@ class oxfordScraper(BaseScraper):
 
     def __init__(self):
         pass
-
-    def load_checkpoint(self):
-        if os.path.exists(self.CHECKPOINT_FILE):
-            with open(self.CHECKPOINT_FILE) as f:
-                token = f.read().strip()
-                return token if token else None
-        return None
-    def save_checkpoint(self,token):
-        with open(self.CHECKPOINT_FILE,"w",encoding="utf-8") as f:
-            f.write(token or "")
     def fetch_record(self,resumption_token = None):
         if resumption_token:
             params = {"verb": "ListRecords", "resumptionToken": resumption_token}
@@ -80,8 +69,8 @@ class oxfordScraper(BaseScraper):
             [t for lst in record.values() if lst for t in lst]
         ).lower()
         return any(k in text for k in self.KEYWORDS_CS)
-    def fetch_data(self) -> list[dict]:
-        token = self.load_checkpoint()
+    def fetch_data(self,api_key:str = "",checkpoint = "") -> list[dict]:
+        token = checkpoint
         if token == "DONE":
             print("All dataset has been crawled")
             return
@@ -89,6 +78,7 @@ class oxfordScraper(BaseScraper):
         total_records = []
         count_total = 0
         max_page = 1
+        last_token = token
         print("Starting ORA crawler")
         if token:
             print(f"Resuming from saved token: {token[:40]}...")
@@ -110,12 +100,12 @@ class oxfordScraper(BaseScraper):
             print(f"Saved {len(filtered)} new (Total: {count_total})")
 
             # Lưu checkpoint
-            self.save_checkpoint(token)
+            last_token = token
 
             # Dừng nếu hết token
             if not token:
                 print("No more pages. Crawl completed.")
-                self.save_checkpoint("DONE")
+                token = "DONE"
                 break
             if page < max_page:    
                 print(f"Waiting {self.DELAY}s before next request...\n")
@@ -123,6 +113,6 @@ class oxfordScraper(BaseScraper):
             page += 1
 
         print(f"Total {len(total_records)} records ")
-        return total_records
+        return total_records,last_token
 
 
