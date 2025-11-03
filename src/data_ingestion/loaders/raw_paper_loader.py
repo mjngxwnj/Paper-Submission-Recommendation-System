@@ -1,4 +1,4 @@
-from ingestion.loaders.base_loader import BaseLoader
+from data_ingestion.loaders.base_loader import BaseLoader
 from database.mongodb.helpers import insert_many
 from typing import Any
 

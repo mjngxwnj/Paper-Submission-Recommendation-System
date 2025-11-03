@@ -5,9 +5,9 @@ from database.mongodb.session import mongo_session
 from database.postgres.session import postgres_session
 from database.mongodb.helpers import ensure_index
 
-from ingestion.scrapers import BaseScraper, SourceAScraper, SourceBScraper
-from ingestion.loaders import BaseLoader, RawPaperLoader
-from ingestion.normalizers import BaseNormalizer, SourceANormalizer, SourceBNormalizer
+from data_ingestion.scrapers import BaseScraper, openAlexScraper
+from data_ingestion.loaders import BaseLoader, RawPaperLoader
+from data_ingestion.normalizers import BaseNormalizer, SourceANormalizer, SourceBNormalizer
 
 from datetime import datetime
 
@@ -18,7 +18,7 @@ def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoa
         scraper : BaseScraper = scraper_default()
         loader : BaseLoader = loader_default(db, src)
 
-        data = scraper.fetch_data()
+        data, checkpoint = scraper.fetch_data()
         loader.load(data)
 
 
@@ -48,11 +48,11 @@ with DAG(
     catchup=False
 ) as dag:
 
-#    scrape_sourceA_task = PythonOperator(
-#        task_id = "scrape_sourceA_task",
-#        python_callable = run_scraper,
-#        op_args = [SourceAScraper, RawPaperLoader, "srcA"]
-#    )
+    scrape_openAlex_task = PythonOperator(
+        task_id = "scrape_openAlex_task",
+        python_callable = run_scraper,
+        op_args = [openAlexScraper, RawPaperLoader, "openAlex"]
+    )
 #
 #    scrape_sourceB_task = PythonOperator(
 #        task_id = "scrape_sourceB_task",
@@ -74,8 +74,8 @@ with DAG(
 #
 #    scrape_sourceA_task >> normalizer_sourceA_task
 #    scrape_sourceB_task >> normalizer_sourceB_task
-
-    test_postgres_connection = PythonOperator(
-        task_id = 'test_postgres_connection',
-        python_callable = run_processing
-    )
+#
+#    test_postgres_connection = PythonOperator(
+#        task_id = 'test_postgres_connection',
+#        python_callable = run_processing
+#    )

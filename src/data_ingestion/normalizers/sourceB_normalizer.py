@@ -1,4 +1,4 @@
-from ingestion.normalizers import BaseNormalizer
+from data_ingestion.normalizers import BaseNormalizer
 
 class SourceBNormalizer(BaseNormalizer):
 
