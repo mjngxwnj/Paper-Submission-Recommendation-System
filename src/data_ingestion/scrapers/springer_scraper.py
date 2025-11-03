@@ -1,10 +1,11 @@
+from data_ingestion.scrapers.base_scraper import BaseScraper
 import requests
 import json
 import time
 import os
 from typing import Union
 
-class SpringerScraper:
+class SpringerScraper(BaseScraper):
     def __init__(self):
         self.query = (
             '(keyword:"computer science" OR '
