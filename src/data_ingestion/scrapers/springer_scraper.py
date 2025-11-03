@@ -6,9 +6,6 @@ from typing import Union
 
 class SpringerScraper:
     def __init__(self):
-        self.configure()
-
-    def configure(self):
         self.query = (
             '(keyword:"computer science" OR '
             'keyword:"artificial intelligence" OR '
@@ -26,13 +23,12 @@ class SpringerScraper:
         self.retry_delay = 5
         self.save_interval = 100
         self.temp_file = "springer_meta_tmp.json"
+        
 
-    def fetch_data(self, api_key: str, checkpoint: Union[int, str]) -> tuple[list[dict], Union[int, str]]:
+    def fetch_data(self, api_key: str = "", checkpoint: Union[int, str] = 0) -> tuple[list[dict], Union[int, str]]:
         self.api_key = api_key
         all_results = []
         print("Bắt đầu crawl Springer Meta API...\n")
-
-        checkpoint: Union[int, str] = 0
         for i in range(self.max_requests):
             start = int(checkpoint) if isinstance(checkpoint, str) else checkpoint
             start = max(1, start)
