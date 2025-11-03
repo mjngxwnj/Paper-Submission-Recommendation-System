@@ -1,8 +1,0 @@
-# ignore python bytecode
-__pycache__/
-
-# ignore virtual env
-venv/
-
-# ignore volumes
-volumes/
