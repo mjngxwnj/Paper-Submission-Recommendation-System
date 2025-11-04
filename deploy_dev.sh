@@ -77,6 +77,14 @@ success "Airflow is healthy!"
 #  --conn-schema mydb) >/dev/null 2>&1
 #success "PostgreSQL connection configured."
 
+info "  4.3: Configuring Springer API connection..."
+(docker exec airflow airflow connections delete springer_api_conn || true) >/dev/null 2>&1
+(docker exec airflow airflow connections add springer_api_conn \
+  --conn-type http \
+  --conn-password 8bdf5b797a7156c9db9224eb4ea3e623) >/dev/null 2>&1
+
+success "API connection configured."
+
 info "Step 5: Setting up PostgreSQL database, schema and table for dev..."
 
 EXISTS=$(docker exec -i $POSTGRES_CONTAINER \

@@ -5,7 +5,7 @@ from database.mongodb.session import mongo_session
 from database.postgres.session import postgres_session
 from database.mongodb.helpers import ensure_index
 
-from data_ingestion.scrapers import BaseScraper, openAlexScraper
+from data_ingestion.scrapers import BaseScraper, openAlexScraper, oxfordScraper, SpringerScraper
 from data_ingestion.loaders import BaseLoader, RawPaperLoader
 from data_ingestion.normalizers import BaseNormalizer, SourceANormalizer, SourceBNormalizer
 
@@ -18,7 +18,7 @@ def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoa
         scraper : BaseScraper = scraper_default()
         loader : BaseLoader = loader_default(db, src)
 
-        data, checkpoint = scraper.fetch_data()
+        data, checkpoint = scraper.fetch_data(api_key = '63f82a43c9ac5a8009d6aae895611199')
         loader.load(data)
 
 
@@ -48,17 +48,23 @@ with DAG(
     catchup=False
 ) as dag:
 
-    scrape_openAlex_task = PythonOperator(
-        task_id = "scrape_openAlex_task",
-        python_callable = run_scraper,
-        op_args = [openAlexScraper, RawPaperLoader, "openAlex"]
-    )
-#
-#    scrape_sourceB_task = PythonOperator(
-#        task_id = "scrape_sourceB_task",
+#    scrape_openAlex_task = PythonOperator(
+#        task_id = "scrape_openAlex_task",
 #        python_callable = run_scraper,
-#        op_args = [SourceBScraper, RawPaperLoader, "srcB"]
+#        op_args = [openAlexScraper, RawPaperLoader, "openAlex"]
 #    )
+#
+#    scrape_oxford_task = PythonOperator(
+#        task_id = "scrape_oxford_task",
+#        python_callable = run_scraper,
+#        op_args = [oxfordScraper, RawPaperLoader, "oxford"]
+#    )
+#
+    scrape_oxford_task = PythonOperator(
+        task_id = "scrape_oxford_task",
+        python_callable = run_scraper,
+        op_args = [SpringerScraper, RawPaperLoader, "oxford"]
+    )
 #
 #    normalizer_sourceA_task = PythonOperator(
 #        task_id = "normalizer_sourceA_task",
