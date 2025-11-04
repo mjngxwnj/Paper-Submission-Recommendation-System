@@ -82,6 +82,41 @@ def insert_many(collection: Collection, documents: list[dict]) -> bool:
         raise
 
 
+def upsert_one(collection: Collection, query: dict, data: dict) -> bool:
+    """
+    Upsert a single document into the specified MongoDB collection.
+    If document matching 'query' exists, it will be updated.
+    Otherwise, a new document will be inserted.
+
+    Args:
+        collection (Collection): The MongoDB collection object.
+        query (dict): Filter to find the document.
+        data (dict): Data to set in the document.
+
+    Returns:
+        bool: True if operation acknowledged, otherwise raises error.
+    """
+
+    # Validate param type
+    validate_type(collection, Collection, "collection")
+    validate_type(query, dict, "query")
+    validate_type(data, dict, "data")
+
+    try:
+        result = collection.update_one(query, {"$set": data}, upsert=True)
+        if result.acknowledged:
+            logging.info(
+                f"Upserted document in collection '{collection.name}' with query {query}."
+            )
+            return True
+        logging.warning(f"Upsert not acknowledged for collection '{collection.name}'.")
+        return False
+
+    except PyMongoError as e:
+        logging.error(f"Failed to upsert_one in collection '{collection.name}': {e}")
+        raise
+
+
 def read(collection: Collection, filter: dict | None = None) -> list[dict]:
     """
     Read documents from a MongoDB collection.
@@ -94,7 +129,7 @@ def read(collection: Collection, filter: dict | None = None) -> list[dict]:
         list[dict]: List of documents retrieved.
     """
 
-    validate_type(collection, collection, "collection")
+    validate_type(collection, Collection, "collection")
     if filter is not None:
         validate_type(filter, dict, "filter")
 

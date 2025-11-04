@@ -12,14 +12,15 @@ from data_ingestion.normalizers import BaseNormalizer, SourceANormalizer, Source
 from datetime import datetime
 
 def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoader],
-                src: str) -> None:
+                batch_num: int, api_key: str, src: str) -> None:
 
     with mongo_session() as db:
         scraper : BaseScraper = scraper_default()
         loader : BaseLoader = loader_default(db, src)
 
-        data, checkpoint = scraper.fetch_data(api_key = '63f82a43c9ac5a8009d6aae895611199')
-        loader.load(data)
+        for i in range(batch_num):
+            data, checkpoint = scraper.fetch_data(api_key = '')
+            loader.load(data)
 
 
 def run_normalizer(normalizer_default: type[BaseNormalizer], src: str,

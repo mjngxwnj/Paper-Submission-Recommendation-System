@@ -3,7 +3,7 @@ from database.mongodb.helpers import insert_many
 from typing import Any
 
 
-class RawPaperLoader(BaseLoader):
+class MongoLoader(BaseLoader):
 
     def load(self, data: list[dict[str, Any]]) -> None:
         """
