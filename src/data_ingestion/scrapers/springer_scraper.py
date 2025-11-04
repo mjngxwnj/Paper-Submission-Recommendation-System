@@ -7,20 +7,12 @@ from typing import Union
 
 class SpringerScraper(BaseScraper):
     def __init__(self):
-        self.query = (
-            '(keyword:"computer science" OR '
-            'keyword:"artificial intelligence" OR '
-            'keyword:"machine learning" OR '
-            'keyword:"deep learning" OR '
-            'keyword:"data mining" OR '
-            'keyword:"computer vision" OR '
-            'keyword:"natural language processing") '
-        )
+        self.query = 'subject:"Computer Science" OR keyword:"computer science"'
         self.count_per_page = 25
         self.max_requests = 500
         self.delay = 1
-        self.timeout = 10
-        self.retry_delay = 5
+        self.timeout = 5
+        self.retry_delay = 3
         self.save_interval = 100
         self.temp_file = "springer_meta_tmp.json"
         
@@ -46,6 +38,7 @@ class SpringerScraper(BaseScraper):
                     time.sleep(self.retry_delay)
             else:
                 print(f"Bỏ qua start={start} sau 3 lần timeout.")
+                checkpoint = start + self.count_per_page
                 continue
 
             if response.status_code == 429:
@@ -59,6 +52,7 @@ class SpringerScraper(BaseScraper):
             records = data.get("records", [])
             if not records:
                 print(f"Hết dữ liệu (start={start})")
+                checkpoint = start + self.count_per_page
                 continue
 
             all_results.extend(records)
