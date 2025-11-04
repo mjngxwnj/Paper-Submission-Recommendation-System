@@ -7,26 +7,27 @@ from typing import Union
 
 class SpringerScraper(BaseScraper):
     def __init__(self):
-        self.query = (
-            'keyword:"computer science" OR '
-            'keyword:"artificial intelligence" OR '
-            'keyword:"machine learning" OR '
-            'keyword:"deep learning" OR '
-            'keyword:"natural language processing" OR '
-            'keyword:"computer vision" OR '
-            'keyword:"data mining" OR '
-            'keyword:"information retrieval" OR '
-            'keyword:"software engineering" OR '
-            'keyword:"distributed systems" OR '
-            'keyword:"database systems" OR '
-            'keyword:"cloud computing" OR '
-            'keyword:"computer networks" OR '
-            'keyword:"cybersecurity"'
-        )
+        self.query = 'keyword:"computer science"'
+        # self.query = (
+        #     'keyword:"computer science" OR '
+        #     'keyword:"artificial intelligence" OR '
+        #     'keyword:"machine learning" OR '
+        #     'keyword:"deep learning" OR '
+        #     'keyword:"natural language processing" OR '
+        #     'keyword:"computer vision" OR '
+        #     'keyword:"data mining" OR '
+        #     'keyword:"information retrieval" OR '
+        #     'keyword:"software engineering" OR '
+        #     'keyword:"distributed systems" OR '
+        #     'keyword:"database systems" OR '
+        #     'keyword:"cloud computing" OR '
+        #     'keyword:"computer networks" OR '
+        #     'keyword:"cybersecurity"'
+        # )
         self.count_per_page = 25
         self.max_requests = 500
         self.delay = 1
-        self.timeout = 5
+        self.timeout = 8
         self.retry_delay = 3
         self.save_interval = 100
         self.temp_file = "springer_meta_tmp.json"
@@ -44,15 +45,15 @@ class SpringerScraper(BaseScraper):
                 f"q={self.query}&p={self.count_per_page}&s={start}&api_key={self.api_key}"
             )
 
-            for attempt in range(3):
+            for attempt in range(2):
                 try:
                     response = requests.get(url, timeout=self.timeout)
                     break
                 except requests.exceptions.ReadTimeout:
-                    print(f"Timeout ở start={start}, thử lại sau {self.retry_delay}s... (lần {attempt+1}/3)")
+                    print(f"Timeout ở start={start}, thử lại sau {self.retry_delay}s...")
                     time.sleep(self.retry_delay)
             else:
-                print(f"Bỏ qua start={start} sau 3 lần timeout.")
+                print(f"Bỏ qua start={start}.")
                 checkpoint = start + self.count_per_page
                 continue
 
