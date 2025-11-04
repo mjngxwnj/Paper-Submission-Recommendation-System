@@ -69,8 +69,8 @@ class oxfordScraper(BaseScraper):
             [t for lst in record.values() if lst for t in lst]
         ).lower()
         return any(k in text for k in self.KEYWORDS_CS)
-    def fetch_data(self,start_token = "") -> list[dict]:
-        token = start_token
+    def fetch_data(self,api_key:str = "",checkpoint = "") -> list[dict]:
+        token = checkpoint
         if token == "DONE":
             print("All dataset has been crawled")
             return
