@@ -15,7 +15,6 @@ class SpringerScraper(BaseScraper):
             'keyword:"data mining" OR '
             'keyword:"computer vision" OR '
             'keyword:"natural language processing") '
-            'AND series:"Lecture Notes in Computer Science"'
         )
         self.count_per_page = 25
         self.max_requests = 500
