@@ -7,7 +7,22 @@ from typing import Union
 
 class SpringerScraper(BaseScraper):
     def __init__(self):
-        self.query = '(keyword:"computer science" OR title:"computer science" OR abstract:"computer science")'
+        self.query = '('
+            'keyword:"computer science" OR '
+            'keyword:"artificial intelligence" OR '
+            'keyword:"machine learning" OR '
+            'keyword:"deep learning" OR '
+            'keyword:"natural language processing" OR '
+            'keyword:"computer vision" OR '
+            'keyword:"data mining" OR '
+            'keyword:"information retrieval" OR '
+            'keyword:"software engineering" OR '
+            'keyword:"distributed systems" OR '
+            'keyword:"database systems" OR '
+            'keyword:"cloud computing" OR '
+            'keyword:"computer networks" OR '
+            'keyword:"cybersecurity"'
+            ')'
         self.count_per_page = 25
         self.max_requests = 500
         self.delay = 1
