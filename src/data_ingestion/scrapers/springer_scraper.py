@@ -7,7 +7,7 @@ from typing import Union
 
 class SpringerScraper(BaseScraper):
     def __init__(self):
-        self.query = '('
+        self.query = (
             'keyword:"computer science" OR '
             'keyword:"artificial intelligence" OR '
             'keyword:"machine learning" OR '
@@ -22,7 +22,7 @@ class SpringerScraper(BaseScraper):
             'keyword:"cloud computing" OR '
             'keyword:"computer networks" OR '
             'keyword:"cybersecurity"'
-            ')'
+        )
         self.count_per_page = 25
         self.max_requests = 500
         self.delay = 1
