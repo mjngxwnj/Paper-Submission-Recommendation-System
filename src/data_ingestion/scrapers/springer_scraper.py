@@ -7,28 +7,27 @@ from typing import Union
 
 class SpringerScraper(BaseScraper):
     def __init__(self):
-        self.query = 'keyword:"computer science"'
-        # self.query = (
-        #     'keyword:"computer science" OR '
-        #     'keyword:"artificial intelligence" OR '
-        #     'keyword:"machine learning" OR '
-        #     'keyword:"deep learning" OR '
-        #     'keyword:"natural language processing" OR '
-        #     'keyword:"computer vision" OR '
-        #     'keyword:"data mining" OR '
-        #     'keyword:"information retrieval" OR '
-        #     'keyword:"software engineering" OR '
-        #     'keyword:"distributed systems" OR '
-        #     'keyword:"database systems" OR '
-        #     'keyword:"cloud computing" OR '
-        #     'keyword:"computer networks" OR '
-        #     'keyword:"cybersecurity"'
-        # )
+        #self.query = 'keyword:"computer science"'
+        self.query = (
+            'keyword:"computer science" OR '
+            'keyword:"artificial intelligence" OR '
+            'keyword:"machine learning" OR '
+            'keyword:"deep learning" OR '
+            'keyword:"natural language processing" OR '
+            'keyword:"computer vision" OR '
+            'keyword:"data mining" OR '
+            'keyword:"information retrieval" OR '
+            'keyword:"software engineering" OR '
+            'keyword:"distributed systems" OR '
+            'keyword:"database systems" OR '
+            'keyword:"cloud computing" OR '
+            'keyword:"computer networks" OR '
+            'keyword:"cybersecurity"'
+        )
         self.count_per_page = 25
-        self.max_requests = 50
-        self.delay = 1
-        self.timeout = 8
-        self.retry_delay = 3
+        self.max_requests = 20
+        self.timeout = 20
+        self.retry_delay = 1
         self.save_interval = 100
         self.temp_file = "springer_meta_tmp.json"
         
@@ -78,7 +77,6 @@ class SpringerScraper(BaseScraper):
                 print(f"Đã lưu tạm {len(all_results)} record.")
 
             checkpoint = start + self.count_per_page
-            time.sleep(self.delay)
 
         if os.path.exists(self.temp_file):
             os.remove(self.temp_file)
