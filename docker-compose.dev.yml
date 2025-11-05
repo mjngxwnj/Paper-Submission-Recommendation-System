@@ -91,6 +91,13 @@ services:
       - ./volumes/milvus:/var/lib/milvus
 
   # Airflow
+  airflow-db:
+    container_name: airflow-db
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+
   airflow:
     container_name: airflow
     volumes:
@@ -98,6 +105,11 @@ services:
       - ./src:/opt/airflow/src
     environment:
       PYTHONPATH: /opt/airflow/src
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__PARALLELISM: 16
+      AIRFLOW__CORE__DAG_CONCURRENCY: 8
+      AIRFLOW__CORE__MAX_ACTIVE_RUNS_PER_DAG: 2
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
     ports:
       - "8080:8080"
     command: >

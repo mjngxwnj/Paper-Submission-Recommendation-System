@@ -49,33 +49,33 @@ done
 
 success "Airflow is healthy!"
 
-#info "Step 3: Initializing Airflow DB..."
-#docker exec airflow bash -c "airflow db init" >/dev/null 2>&1
-#success "Airflow DB initialized."
-#
-#info "Step 4: Setting up Airflow connections..."
-#
-#info "  4.1: Configuring MongoDB connection..."
-#(docker exec airflow airflow connections delete mongo_default || true) >/dev/null 2>&1
-#(docker exec airflow airflow connections add mongo_default \
-#  --conn-type mongo \
-#  --conn-host mongodb \
-#  --conn-port 27017 \
-#  --conn-login admin \
-#  --conn-password admin \
-#  --conn-schema raw_papers) >/dev/null 2>&1
-#success "MongoDB connection configured."
-#
-#info "  4.2: Configuring PostgreSQL connection..."
-#(docker exec airflow airflow connections delete postgres_default || true) >/dev/null 2>&1
-#(docker exec airflow airflow connections add postgres_default \
-#  --conn-type postgres \
-#  --conn-host postgres \
-#  --conn-port 5432 \
-#  --conn-login admin \
-#  --conn-password admin \
-#  --conn-schema mydb) >/dev/null 2>&1
-#success "PostgreSQL connection configured."
+info "Step 3: Initializing Airflow DB..."
+docker exec airflow bash -c "airflow db init" >/dev/null 2>&1
+success "Airflow DB initialized."
+
+info "Step 4: Setting up Airflow connections..."
+
+info "  4.1: Configuring MongoDB connection..."
+(docker exec airflow airflow connections delete mongo_default || true) >/dev/null 2>&1
+(docker exec airflow airflow connections add mongo_default \
+  --conn-type mongo \
+  --conn-host mongodb \
+  --conn-port 27017 \
+  --conn-login admin \
+  --conn-password admin \
+  --conn-schema raw_papers) >/dev/null 2>&1
+success "MongoDB connection configured."
+
+info "  4.2: Configuring PostgreSQL connection..."
+(docker exec airflow airflow connections delete postgres_default || true) >/dev/null 2>&1
+(docker exec airflow airflow connections add postgres_default \
+  --conn-type postgres \
+  --conn-host postgres \
+  --conn-port 5432 \
+  --conn-login admin \
+  --conn-password admin \
+  --conn-schema mydb) >/dev/null 2>&1
+success "PostgreSQL connection configured."
 
 info "  4.3: Configuring Springer API connection..."
 (docker exec airflow airflow connections delete springer_api_conn || true) >/dev/null 2>&1
@@ -85,29 +85,29 @@ info "  4.3: Configuring Springer API connection..."
 
 success "API connection configured."
 
-info "Step 5: Setting up PostgreSQL database, schema and table for dev..."
-
-EXISTS=$(docker exec -i $POSTGRES_CONTAINER \
-  psql "postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/postgres" \
-  -tA -c "SELECT 1 FROM pg_database WHERE datname='$DB_NAME';")
-
-if [ "$EXISTS" != "1" ]; then
-  docker exec -i $POSTGRES_CONTAINER \
-    psql "postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/postgres" \
-    -c "CREATE DATABASE $DB_NAME;"
-  success "Database $DB_NAME created."
-else
-  info "Database $DB_NAME already exists."
-fi
-
-for file in $(ls $SQL_DIR/*.sql | sort); do
-  info "Applying $file..."
-  docker exec -i $POSTGRES_CONTAINER \
-    psql "postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME" \
-    -f - <"$file"
-done
-
-success "Database, schema, and tables are ready for dev."
+#info "Step 5: Setting up PostgreSQL database, schema and table for dev..."
+#
+#EXISTS=$(docker exec -i $POSTGRES_CONTAINER \
+#  psql "postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/postgres" \
+#  -tA -c "SELECT 1 FROM pg_database WHERE datname='$DB_NAME';")
+#
+#if [ "$EXISTS" != "1" ]; then
+#  docker exec -i $POSTGRES_CONTAINER \
+#    psql "postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/postgres" \
+#    -c "CREATE DATABASE $DB_NAME;"
+#  success "Database $DB_NAME created."
+#else
+#  info "Database $DB_NAME already exists."
+#fi
+#
+#for file in $(ls $SQL_DIR/*.sql | sort); do
+#  info "Applying $file..."
+#  docker exec -i $POSTGRES_CONTAINER \
+#    psql "postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME" \
+#    -f - <"$file"
+#done
+#
+#success "Database, schema, and tables are ready for dev."
 
 echo ""
 success "All services are up and running!"
