@@ -5,22 +5,63 @@ from database.mongodb.session import mongo_session
 from database.postgres.session import postgres_session
 from database.mongodb.helpers import ensure_index
 
+from data_ingestion.state import BaseCheckpoint, MongoCheckpoint
 from data_ingestion.scrapers import BaseScraper, openAlexScraper, oxfordScraper, SpringerScraper
-from data_ingestion.loaders import BaseLoader, RawPaperLoader
+from data_ingestion.loaders import BaseLoader, MongoLoader
 from data_ingestion.normalizers import BaseNormalizer, SourceANormalizer, SourceBNormalizer
 
 from datetime import datetime
+import logging
 
 def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoader],
                 batch_num: int, api_key: str, src: str) -> None:
+    """
+    Run a scraping job for a given scraper and loader, handling checkpoints and errors.
+
+    This function executes a scraper for a specified number of batches, loads the data into
+    the target storage, and manages checkpoints to allow running on a daily schedule.
+
+    Args:
+        scraper_default (type[BaseScraper]): The scraper class to instantiate and run.
+        loader_default (type[BaseLoader]): The loader class for storing scraped data.
+        batch_num (int): Number of batches to scrape in this run.
+        api_key (str): API key or authentication token required by the scraper.
+        src (str): Source identifier, used by loader and checkpoint.
+    """
 
     with mongo_session() as db:
         scraper : BaseScraper = scraper_default()
         loader : BaseLoader = loader_default(db, src)
 
+        #get checkpoint
+        checkpoint : BaseCheckpoint = MongoCheckpoint(db, src)
+        last_checkpoint = checkpoint.get_checkpoint()
+
         for i in range(batch_num):
-            data, checkpoint = scraper.fetch_data(api_key = '')
-            loader.load(data)
+            try:
+                if not last_checkpoint:
+                    data, new_checkpoint = scraper.fetch_data(api_key = api_key)
+
+                else:
+                    data, new_checkpoint = scraper.fetch_data(api_key = api_key, checkpoint = last_checkpoint)
+
+                loader.load(data)
+
+                if new_checkpoint is not None:
+                    last_checkpoint = new_checkpoint
+
+                logging.info(f"Batch {i+1}/{batch_num} completed, checkpoint: {last_checkpoint}")
+
+            except Exception as e:
+                #before raise an error, save checkpoint
+                checkpoint.save_checkpoint(last_checkpoint)
+
+                print(f"[Batch {i+1}] Error occurred: {e}. Checkpoint saved: {last_checkpoint}")
+
+                raise
+
+        checkpoint.save_checkpoint(last_checkpoint)
+        print(f"Scrape completed. Final checkpoint: {last_checkpoint}")
 
 
 def run_normalizer(normalizer_default: type[BaseNormalizer], src: str,
@@ -49,23 +90,42 @@ with DAG(
     catchup=False
 ) as dag:
 
-#    scrape_openAlex_task = PythonOperator(
-#        task_id = "scrape_openAlex_task",
+#    scrape_springer_task = PythonOperator(
+#        task_id = "scrape_springer_task",
 #        python_callable = run_scraper,
-#        op_args = [openAlexScraper, RawPaperLoader, "openAlex"]
+#        op_kwargs = {
+#            'scraper_default': SpringerScraper,
+#            'loader_default': MongoLoader,
+#            'batch_num': 1,
+#            'api_key': "8bdf5b797a7156c9db9224eb4ea3e623",
+#            'src': 'springer'
+#        }
 #    )
-#
-#    scrape_oxford_task = PythonOperator(
-#        task_id = "scrape_oxford_task",
-#        python_callable = run_scraper,
-#        op_args = [oxfordScraper, RawPaperLoader, "oxford"]
-#    )
-#
+
+    scrape_openalex_task = PythonOperator(
+        task_id = "scrape_openalex_task",
+        python_callable = run_scraper,
+        op_kwargs = {
+            'scraper_default': openAlexScraper,
+            'loader_default': MongoLoader,
+            'batch_num': 1,
+            'api_key': "",
+            'src': 'openalex'
+        }
+    )
+
     scrape_oxford_task = PythonOperator(
         task_id = "scrape_oxford_task",
         python_callable = run_scraper,
-        op_args = [SpringerScraper, RawPaperLoader, "oxford"]
+        op_kwargs = {
+            'scraper_default': oxfordScraper,
+            'loader_default': MongoLoader,
+            'batch_num': 1,
+            'api_key': "",
+            'src': 'oxford'
+        }
     )
+#
 #
 #    normalizer_sourceA_task = PythonOperator(
 #        task_id = "normalizer_sourceA_task",

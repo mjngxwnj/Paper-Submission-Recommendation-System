@@ -2,22 +2,20 @@ from abc import ABC, abstractmethod
 
 class BaseCheckpoint(ABC):
 
-    def __init__(self, db):
+    def __init__(self, db, src: str):
         """
         Args:
             db: Optional database/session object (for subclass to use).
         """
 
         self._db = db
+        self._src = src
 
 
     @abstractmethod
-    def get_checkpoint(self, source: str) -> str:
+    def get_checkpoint(self) -> str:
         """
         Load checkpoint.
-
-        Args:
-            source (str): Datasource to get checkpoint.
 
         Returns:
             str: Last stored offset.
@@ -27,12 +25,11 @@ class BaseCheckpoint(ABC):
 
 
     @abstractmethod
-    def save_checkpoint(self, source: str, value: str) -> None:
+    def save_checkpoint(self, value: str) -> None:
         """
         Save checkpoint.
 
         Args:
-            source (str): Datasource (springer, openalex,...)
             value (str): Offset or batch index.
         """
 
