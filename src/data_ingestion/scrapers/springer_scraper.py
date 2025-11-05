@@ -25,7 +25,7 @@ class SpringerScraper(BaseScraper):
         #     'keyword:"cybersecurity"'
         # )
         self.count_per_page = 25
-        self.max_requests = 500
+        self.max_requests = 50
         self.delay = 1
         self.timeout = 8
         self.retry_delay = 3
