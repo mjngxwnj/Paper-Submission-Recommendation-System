@@ -24,7 +24,7 @@ class SpringerScraper(BaseScraper):
             'keyword:"computer networks" OR '
             'keyword:"cybersecurity"'
         )
-        self.count_per_page = 2520
+        self.count_per_page = 25
         self.max_requests = 20
         self.timeout = 20
         self.retry_delay = 1
