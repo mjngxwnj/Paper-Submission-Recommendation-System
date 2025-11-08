@@ -98,37 +98,37 @@ with DAG(
         op_kwargs = {
             'scraper_default': SpringerScraper,
             'loader_default': MongoLoader,
-            'batch_num': 10,
-            'api_key': "8bdf5b797a7156c9db9224eb4ea3e623",
+            'batch_num': 25,
+            'api_key': "b9ff350eae9f1cf54d61f5a69cf1927d",
             'src': 'springer'
         }
     )
 
-#    scrape_openalex_task = PythonOperator(
-#        task_id = "scrape_openalex_task",
-#        python_callable = run_scraper,
-#        op_kwargs = {
-#            'scraper_default': openAlexScraper,
-#            'loader_default': MongoLoader,
-#            'batch_num': 100,
-#            'api_key': "",
-#            'src': 'openalex'
-#        }
-#    )
-#
-#    scrape_oxford_task = PythonOperator(
-#        task_id = "scrape_oxford_task",
-#        python_callable = run_scraper,
-#        op_kwargs = {
-#            'scraper_default': oxfordScraper,
-#            'loader_default': MongoLoader,
-#            'batch_num': 100,
-#            'api_key': "",
-#            'src': 'oxford'
-#        }
-#    )
-#
-#
+    scrape_openalex_task = PythonOperator(
+        task_id = "scrape_openalex_task",
+        python_callable = run_scraper,
+        op_kwargs = {
+            'scraper_default': openAlexScraper,
+            'loader_default': MongoLoader,
+            'batch_num': 1,
+            'api_key': "",
+            'src': 'openalex'
+        }
+    )
+
+    scrape_oxford_task = PythonOperator(
+        task_id = "scrape_oxford_task",
+        python_callable = run_scraper,
+        op_kwargs = {
+            'scraper_default': oxfordScraper,
+            'loader_default': MongoLoader,
+            'batch_num': 100,
+            'api_key': "",
+            'src': 'oxford'
+        }
+    )
+
+
 #    normalizer_sourceA_task = PythonOperator(
 #        task_id = "normalizer_sourceA_task",
 #        python_callable = run_normalizer,
