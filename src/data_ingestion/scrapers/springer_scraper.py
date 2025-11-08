@@ -9,24 +9,35 @@ class SpringerScraper(BaseScraper):
     def __init__(self):
         #self.query = 'keyword:"computer science"'
         self.query = (
-            'keyword:"computer science" OR '
-            'keyword:"artificial intelligence" OR '
-            'keyword:"machine learning" OR '
-            'keyword:"deep learning" OR '
-            'keyword:"natural language processing" OR '
-            'keyword:"computer vision" OR '
-            'keyword:"data mining" OR '
-            'keyword:"information retrieval" OR '
-            'keyword:"software engineering" OR '
-            'keyword:"distributed systems" OR '
-            'keyword:"database systems" OR '
-            'keyword:"cloud computing" OR '
-            'keyword:"computer networks" OR '
-            'keyword:"cybersecurity"'
+          '('
+          'keyword:"computer science" OR '
+          'keyword:"artificial intelligence" OR '
+          'keyword:"machine learning" OR '
+          'keyword:"deep learning" OR '
+          'keyword:"natural language processing" OR '
+          'keyword:"computer vision" OR '
+          'keyword:"data mining" OR '
+          'keyword:"information retrieval" OR '
+          'keyword:"software engineering" OR '
+          'keyword:"distributed systems" OR '
+          'keyword:"database systems" OR '
+          'keyword:"cloud computing" OR '
+          'keyword:"computer networks" OR '
+          'keyword:"cybersecurity" OR '
+          'keyword:"data science" OR '
+          'keyword:"big data" OR '
+          'keyword:"blockchain" OR '
+          'keyword:"IoT" OR '
+          'keyword:"robotics" OR '
+          'keyword:"computer graphics" OR '
+          'keyword:"theoretical computer science" OR '
+          'keyword:"bioinformatics"'
+          ') AND '
+          'type:"Book"'
         )
         self.count_per_page = 25
         self.max_requests = 20
-        self.timeout = 20
+        self.timeout = 30
         self.retry_delay = 1
         self.save_interval = 100
         self.temp_file = "springer_meta_tmp.json"
