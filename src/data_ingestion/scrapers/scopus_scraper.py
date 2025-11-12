@@ -23,10 +23,10 @@ class ScopusScraper:
             'cybersecurity'
         )
         self.count_per_page = 25
-        self.max_requests = 2000   
-        self.timeout = 10
-        self.retry_delay = 5
-        self.save_interval = 1000  
+        self.max_requests = 20   
+        self.timeout = 20
+        self.retry_delay = 10
+        self.save_interval = 100  
         self.temp_file = "scopus_temp.json"
 
     def fetch_data(self, api_key: str, checkpoint: Union[int, str] = 0) -> tuple[list[dict], Union[int, str]]:
@@ -43,15 +43,15 @@ class ScopusScraper:
             headers = {"X-ELS-APIKey": self.api_key, "Accept": "application/json"}
 
             # retry khi lỗi request
-            for attempt in range(3):
+            for attempt in range(2):
                 try:
                     response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
                     break
                 except requests.exceptions.RequestException as e:
-                    print(f"Lỗi request tại start={start}: {e}, thử lại {attempt+1}/3...")
+                    print(f"Lỗi request tại start={start}: {e}, thử lại...")
                     time.sleep(self.retry_delay)
             else:
-                print(f"Bỏ qua batch start={start} sau 3 lần retry thất bại")
+                print(f"Bỏ qua batch start={start} sau khi retry thất bại")
                 checkpoint = start + self.count_per_page
                 continue
 
