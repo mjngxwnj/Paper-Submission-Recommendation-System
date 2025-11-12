@@ -32,12 +32,12 @@ class ScopusScraper:
     def fetch_data(self, api_key: str, checkpoint: Union[int, str] = 0) -> tuple[list[dict], Union[int, str]]:
         self.api_key = api_key
         all_results = []
-        start = int(checkpoint) if isinstance(checkpoint, str) else checkpoint
         batch_num = 0
 
         print("Bắt đầu crawl Scopus API...\n")
 
         for _ in range(self.max_requests):
+            start = int(checkpoint) if isinstance(checkpoint, str) else checkpoint
             url = "https://api.elsevier.com/content/search/scopus"
             params = {"query": self.query, "count": self.count_per_page, "start": start}
             headers = {"X-ELS-APIKey": self.api_key, "Accept": "application/json"}
