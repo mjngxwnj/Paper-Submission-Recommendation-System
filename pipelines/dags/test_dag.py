@@ -6,7 +6,7 @@ from database.postgres.session import postgres_session
 from database.mongodb.helpers import ensure_index
 
 from data_ingestion.state import BaseCheckpoint, MongoCheckpoint
-from data_ingestion.scrapers import BaseScraper, openAlexScraper, oxfordScraper, SpringerScraper
+from data_ingestion.scrapers import BaseScraper, openAlexScraper, oxfordScraper, SpringerScraper, ScopusScraper
 from data_ingestion.loaders import BaseLoader, MongoLoader
 from data_ingestion.normalizers import BaseNormalizer, SourceANormalizer, SourceBNormalizer
 
@@ -104,29 +104,41 @@ with DAG(
         }
     )
 
-    scrape_openalex_task = PythonOperator(
-        task_id = "scrape_openalex_task",
+#    scrape_openalex_task = PythonOperator(
+#        task_id = "scrape_openalex_task",
+#        python_callable = run_scraper,
+#        op_kwargs = {
+#            'scraper_default': openAlexScraper,
+#            'loader_default': MongoLoader,
+#            'batch_num': 1,
+#            'api_key': "",
+#            'src': 'openalex'
+#        }
+#    )
+
+    scrape_scopus_task = PythonOperator(
+        task_id = "scrape_scopus_task",
         python_callable = run_scraper,
         op_kwargs = {
-            'scraper_default': openAlexScraper,
+            'scraper_default': ScopusScraper,
             'loader_default': MongoLoader,
-            'batch_num': 1,
-            'api_key': "",
-            'src': 'openalex'
+            'batch_num': 25,
+            'api_key': "58f0c056352500c8175e0418b08a4c4e",
+            'src': 'scopus'
         }
     )
 
-    scrape_oxford_task = PythonOperator(
-        task_id = "scrape_oxford_task",
-        python_callable = run_scraper,
-        op_kwargs = {
-            'scraper_default': oxfordScraper,
-            'loader_default': MongoLoader,
-            'batch_num': 100,
-            'api_key': "",
-            'src': 'oxford'
-        }
-    )
+#    scrape_oxford_task = PythonOperator(
+#        task_id = "scrape_oxford_task",
+#        python_callable = run_scraper,
+#        op_kwargs = {
+#            'scraper_default': oxfordScraper,
+#            'loader_default': MongoLoader,
+#            'batch_num': 100,
+#            'api_key': "",
+#            'src': 'oxford'
+#        }
+#    )
 
 
 #    normalizer_sourceA_task = PythonOperator(

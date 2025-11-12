@@ -7,7 +7,7 @@ class MongoCheckpoint(BaseCheckpoint):
         """
         Args:
             db: Optional MongoDB database/session object
-            src (str): Datasource (springer, openalex,...)
+            source (str): Datasource (springer, openalex,...)
             collection_name: Name of collection to store checkpoints
         """
 
