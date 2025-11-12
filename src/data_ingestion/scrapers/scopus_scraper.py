@@ -57,7 +57,6 @@ class ScopusScraper:
                 break
 
             data = response.json()
-            print(data.get("search-results", {}))
             records = data.get("search-results", {}).get("entry", [])
             if not records:
                 print(f"Hết dữ liệu tại start={start}")
