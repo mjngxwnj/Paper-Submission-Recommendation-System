@@ -13,7 +13,6 @@ class openAlexScraper(BaseScraper):
                 "concepts","authorships","locations","primary_location","cited_by_count",
                 "primary_topic","keywords"]
     MAX_RESULTS = 1000
-    DELAY = 0.3
     MAX_RETRIES = 3
     
     def __init__(self):
@@ -43,7 +42,7 @@ class openAlexScraper(BaseScraper):
                 if abstract:
                     clean_abstract = re.sub("<[^<]+?>", "", abstract)
                 else:
-                    clean_abstract = None
+                    clean_abstract = "None"
                 return {"doi":doi,"abstract":clean_abstract.strip()}
             except Exception as e:
                 print(f"[Attempt {attempt}/{retries}] Lỗi khi lấy {doi}: {e}")
@@ -56,12 +55,12 @@ class openAlexScraper(BaseScraper):
     def fetch_data(self,api_key:str = "",checkpoint = "*") -> list[dict]:
         cursor = checkpoint
         print(f"Crawling OpenAlex for field: {self.FIELD}")
-
         count_result = 0
         result = []
         last_cursor = cursor
         while count_result < self.MAX_RESULTS:
             try:
+                start_time = time.time()
                 works = Works().filter(concepts = {"id":self.FIELD_ID}).select(self.DATA_NEED).get(per_page = 200,cursor = cursor)
                 work_list = list(works)
                 if not list(works):
@@ -76,13 +75,16 @@ class openAlexScraper(BaseScraper):
                     else:
                         record["abstract"] = None
                     result.append(record)
+                end_time = time.time()
+                duration = end_time - start_time
                 count_result += len(work_list)
                 cursor = works.meta["next_cursor"]
                 last_cursor = cursor
                 if not cursor:
                     print("No next page to fetch ")
                     break
-                time.sleep(self.DELAY)
+                if duration <= 10:
+                    time.sleep(10 - duration)
             except (requests.exceptions.RequestException, Exception) as e:
                 print(f"Error occurred: {e}")
                 for i in range(1,self.MAX_RETRIES + 1):
