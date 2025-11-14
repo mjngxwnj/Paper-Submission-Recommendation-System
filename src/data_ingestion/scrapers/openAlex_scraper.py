@@ -4,6 +4,8 @@ from pyalex import config,Works
 import time
 import os
 import requests
+import crossref.restful
+import re
 class openAlexScraper(BaseScraper):
     FIELD = "Computer Science"
     FIELD_ID = "C41008148"
@@ -22,6 +24,35 @@ class openAlexScraper(BaseScraper):
         config.max_retries = 3
         config.retry_backoff_factor = 0.1
         config.retry_http_codes = [429, 500, 503]  
+    # config for crawl abstract
+    def etiquette(self):
+        return {
+        "application_name": "PaperSubmission",
+        "application_version": "1.0",
+        "application_url": "https://github.com/mjngxwnj/Paper-Submission-Recommendation-System.git",
+        "contact_email": "22110218@student.hcmus.edu.vn"
+    }
+    def get_abstract(self,doi, retries:int = 3, backoff:float = 1.0):
+        abstrat_record = crossref.restful.Works(etiquette= self.etiquette())
+        for attempt in range(1,retries + 1):
+            try:
+                data = abstrat_record.doi(doi)
+                if not data:
+                    return {"doi":doi,"abstract":None}
+                abstract = data.get("abstract",None)
+                if abstract:
+                    clean_abstract = re.sub("<[^<]+?>", "", abstract)
+                else:
+                    clean_abstract = None
+                return {"doi":doi,"abstract":clean_abstract.strip()}
+            except Exception as e:
+                print(f"[Attempt {attempt}/{retries}] Lỗi khi lấy {doi}: {e}")
+                if attempt < retries:
+                    sleep_time = backoff * 2 * attempt
+                    print(f"Waitting {sleep_time} before retries")
+                    time.sleep(sleep_time)
+                else: 
+                    return {"doi": doi,"abstract": None}      
     def fetch_data(self,api_key:str = "",checkpoint = "*") -> list[dict]:
         cursor = checkpoint
         print(f"Crawling OpenAlex for field: {self.FIELD}")
@@ -37,7 +68,14 @@ class openAlexScraper(BaseScraper):
                     print("No more records")
                     break
                 print(f"Crawl {len(work_list)} record number")
-                result += work_list
+                for record in work_list:
+                    doi = record.get("doi",None)
+                    if doi:
+                        abstract_data = self.get_abstract(doi)
+                        record["abstract"] = abstract_data.get("abstract",None)
+                    else:
+                        record["abstract"] = None
+                    result.append(record)
                 count_result += len(work_list)
                 cursor = works.meta["next_cursor"]
                 last_cursor = cursor
