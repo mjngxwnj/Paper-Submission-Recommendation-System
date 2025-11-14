@@ -1,26 +1,44 @@
+from data_ingestion.scrapers.base_scraper import BaseScraper
 import requests
 import json
 import time
 import os
 from typing import Union
 
-class SpringerScraper:
+class SpringerScraper(BaseScraper):
     def __init__(self):
+        #self.query = 'keyword:"computer science"'
         self.query = (
-            '(keyword:"computer science" OR '
-            'keyword:"artificial intelligence" OR '
-            'keyword:"machine learning" OR '
-            'keyword:"deep learning" OR '
-            'keyword:"data mining" OR '
-            'keyword:"computer vision" OR '
-            'keyword:"natural language processing") '
-            'AND series:"Lecture Notes in Computer Science"'
+          '('
+          'keyword:"computer science" OR '
+          'keyword:"artificial intelligence" OR '
+          'keyword:"machine learning" OR '
+          'keyword:"deep learning" OR '
+          'keyword:"natural language processing" OR '
+          'keyword:"computer vision" OR '
+          'keyword:"data mining" OR '
+          'keyword:"information retrieval" OR '
+          'keyword:"software engineering" OR '
+          'keyword:"distributed systems" OR '
+          'keyword:"database systems" OR '
+          'keyword:"cloud computing" OR '
+          'keyword:"computer networks" OR '
+          'keyword:"cybersecurity" OR '
+          'keyword:"data science" OR '
+          'keyword:"big data" OR '
+          'keyword:"blockchain" OR '
+          'keyword:"IoT" OR '
+          'keyword:"robotics" OR '
+          'keyword:"computer graphics" OR '
+          'keyword:"theoretical computer science" OR '
+          'keyword:"bioinformatics"'
+          ') AND '
+          'type:"Book"'
         )
         self.count_per_page = 25
-        self.max_requests = 500
-        self.delay = 1
-        self.timeout = 10
-        self.retry_delay = 5
+        self.max_requests = 20
+        self.timeout = 30
+        self.retry_delay = 1
         self.save_interval = 100
         self.temp_file = "springer_meta_tmp.json"
         
@@ -37,15 +55,16 @@ class SpringerScraper:
                 f"q={self.query}&p={self.count_per_page}&s={start}&api_key={self.api_key}"
             )
 
-            for attempt in range(3):
+            for attempt in range(2):
                 try:
                     response = requests.get(url, timeout=self.timeout)
                     break
                 except requests.exceptions.ReadTimeout:
-                    print(f"Timeout ở start={start}, thử lại sau {self.retry_delay}s... (lần {attempt+1}/3)")
+                    print(f"Timeout ở start={start}, thử lại sau {self.retry_delay}s...")
                     time.sleep(self.retry_delay)
             else:
-                print(f"Bỏ qua start={start} sau 3 lần timeout.")
+                print(f"Bỏ qua start={start}.")
+                checkpoint = start + self.count_per_page
                 continue
 
             if response.status_code == 429:
@@ -59,6 +78,7 @@ class SpringerScraper:
             records = data.get("records", [])
             if not records:
                 print(f"Hết dữ liệu (start={start})")
+                checkpoint = start + self.count_per_page
                 continue
 
             all_results.extend(records)
@@ -68,7 +88,6 @@ class SpringerScraper:
                 print(f"Đã lưu tạm {len(all_results)} record.")
 
             checkpoint = start + self.count_per_page
-            time.sleep(self.delay)
 
         if os.path.exists(self.temp_file):
             os.remove(self.temp_file)
