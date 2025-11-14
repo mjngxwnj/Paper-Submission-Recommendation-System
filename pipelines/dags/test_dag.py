@@ -8,7 +8,7 @@ from database.mongodb.helpers import ensure_index
 from data_ingestion.state import BaseCheckpoint, MongoCheckpoint
 from data_ingestion.scrapers import BaseScraper, openAlexScraper, oxfordScraper, SpringerScraper, ScopusScraper
 from data_ingestion.loaders import BaseLoader, MongoLoader
-from data_ingestion.normalizers import BaseNormalizer, SourceANormalizer, SourceBNormalizer
+from data_ingestion.normalizers import BaseNormalizer, SpringerNormalizer
 
 from datetime import datetime
 import logging
@@ -55,19 +55,28 @@ def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoa
                 logging.info(f"Batch {i+1}/{batch_num} completed, checkpoint: {last_checkpoint}")
 
             except Exception as e:
-                #before raise an error, save checkpoint
-                checkpoint.save_checkpoint(last_checkpoint)
-
-                print(f"[Batch {i+1}] Error occurred: {e}. Checkpoint saved: {last_checkpoint}")
+                print(f"[Batch {i+1}] Error occurred: {e}. Checkpoint: {last_checkpoint}")
 
                 raise
 
-        checkpoint.save_checkpoint(last_checkpoint)
-        print(f"Scrape completed. Final checkpoint: {last_checkpoint}")
+            finally:
+                checkpoint.save_checkpoint(last_checkpoint)
+                logging.info(f"[Batch {i+1}] Checkpoint saved: {last_checkpoint}")
+
+        logging.info(f"Scrape completed. Final checkpoint: {last_checkpoint}")
 
 
 def run_normalizer(normalizer_default: type[BaseNormalizer], src: str,
                    target_src: str) -> None:
+    """
+    Run a normalization job for a given normalizer class, transforming and upserting data
+    from a source collection into a target collection.
+
+    Args:
+        normalizer_default (type[BaseNormalizer]): The normalizer class to instantiate and run.
+        src (str): Source collection name or identifier to normalize data from.
+        target_src (str): Target collection name or identifier where normalized data will be stored.
+    """
 
     with mongo_session() as db:
         normalizer : BaseNormalizer = normalizer_default(db, src, target_src)
@@ -122,7 +131,7 @@ with DAG(
         op_kwargs = {
             'scraper_default': ScopusScraper,
             'loader_default': MongoLoader,
-            'batch_num': 25,
+            'batch_num': 100,
             'api_key': "58f0c056352500c8175e0418b08a4c4e",
             'src': 'scopus'
         }
