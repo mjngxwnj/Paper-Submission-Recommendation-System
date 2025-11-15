@@ -20,21 +20,18 @@ class SpringerNormalizer(BaseNormalizer):
         """
 
         pipeline = [
-            #Transform fields.
             {
                 "$addFields": {
-                    "pubDate": {"$dateFromString": {"dateString": "$publicationDate"}},
+                    "pubDate": { "$dateFromString": { "dateString": "$publicationDate" } },
 
-                    "openaccess": {"$eq": ["$openaccess", "true"]},
-
-                    "publication_type": {"$toLower": "$publicationType"},
+                    "openaccess": { "$cond": [ { "$eq": ["$openaccess", "true"] }, True, False ] },
 
                     "abstractlink": {
                         "$arrayElemAt": [
                             {
                                 "$map": {
                                     "input": {
-                                        "$filter": { "input": "$url", "cond": { "$eq": ["$$this.format", "pdf"] } }
+                                        "$filter": { "input": { "$ifNull": ["$url", []] }, "cond": { "$eq": ["$$this.format", "pdf"] } }
                                     },
                                     "as": "u",
                                     "in": "$$u.value"
@@ -44,48 +41,61 @@ class SpringerNormalizer(BaseNormalizer):
                         ]
                     },
 
-                    "author": {"$map": {"input": {"$ifNull": ["$creators", []]}, "as": "c", "in": "$$c.creator"}},
+                    "author": {
+                        "$cond": [
+                            { "$gt": [{ "$size": { "$ifNull": ["$creators", []] } }, 0] },
+                            { "$map": { "input": "$creators", "as": "c", "in": "$$c.creator" } },
+                            None
+                        ]
+                    },
 
-                    "orcid":  {"$map": {"input": {"$ifNull": ["$creators", []]}, "as": "c", "in": "$$c.ORCID"}},
+                    "orcid": {
+                        "$cond": [
+                            { "$gt": [{ "$size": { "$ifNull": ["$creators", []] } }, 0] },
+                            { "$map": { "input": "$creators", "as": "c", "in": "$$c.ORCID" } },
+                            None
+                        ]
+                    },
 
                     "target_venue": {
-                        "$arrayElemAt": [
-                            {"$map": {"input": {"$ifNull": ["$conferenceInfo", []]}, "as": "c", "in": "$$c.confSeriesName"}},
-                            0
+                        "$cond": [
+                            { "$gt": [{ "$size": { "$ifNull": ["$conferenceInfo", []] } }, 0] },
+                            { "$arrayElemAt": [
+                                { "$map": { "input": "$conferenceInfo", "as": "c", "in": "$$c.confSeriesName" } },
+                                0
+                            ]},
+                            None
                         ]
                     }
                 }
             },
 
-            #Project only neccessary fields for the target
             {
                 "$project": {
-                "_id": 0,
-                "doi": 1,
-                "title": 1,
-                "publication_year": {"$year": "$pubDate"},
-                "publication_month": {"$month": "$pubDate"},
-                "publication_day": {"$dayOfMonth": "$pubDate"},
-                "publication_type": 1,
-                "language": 1,
-                "openaccess": 1,
-                "abstractlink": 1,
-                "keyword": 1,
-                "abstract": 1,
-                "author": 1,
-                "orcid": 1,
-                "target_venue": 1
+                    "_id": 0,
+                    "doi": 1,
+                    "title": 1,
+                    "publication_year": { "$year": "$pubDate" },
+                    "publication_month": { "$month": "$pubDate" },
+                    "publication_day": { "$dayOfMonth": "$pubDate" },
+                    "openaccess": 1,
+                    "abstractlink": 1,
+                    "keyword": 1,
+                    "abstract": 1,
+                    "author": 1,
+                    "orcid": 1,
+                    "target_venue": 1
                 }
             },
 
-            #Upsert into target collection
-            {"$merge": {
-                "into": self._target_collection_name,
-                "on": "doi",
-                "whenMatched": "merge",
-                "whenMatched": "keepExisting",
-                "whenNotMatched": "insert"
-            }}
+            {
+                "$merge": {
+                    "into": self._target_collection_name,
+                    "on": "doi",
+                    "whenMatched": "keepExisting",
+                    "whenNotMatched": "insert"
+                }
+            }
         ]
 
         return pipeline
