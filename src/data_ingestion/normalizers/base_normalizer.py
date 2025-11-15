@@ -39,17 +39,22 @@ class BaseNormalizer(ABC):
         pass
 
 
-    def normalize(self):
+    def normalize(self,):
         """
         Execute normalization an upsert.
         """
+
         index_fields_list = self._get_index_field()
-        pipeline = self._get_pipeline()
 
+        #ensure index
         for field in index_fields_list:
-            ensure_index(self._target_collection, field = field, unique = True)
+            ensure_index(self._target_collection, field = field, unique = (field == 'doi'))
 
+        #build pipeline
+        pipeline = self._get_pipeline()
         aggregate(self._collection, pipeline)
+
+
 
 
 

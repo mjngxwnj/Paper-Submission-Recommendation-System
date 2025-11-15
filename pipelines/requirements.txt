@@ -12,6 +12,8 @@ requests==2.32.3
 beautifulsoup4==4.12.3
 lxml==5.3.0
 selenium==4.25.0
+crossrefapi==1.6.0
+pyalex==0.18
 
 # === API & Database ===
 pyalex

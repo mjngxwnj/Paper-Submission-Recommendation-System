@@ -13,7 +13,7 @@ class BaseCheckpoint(ABC):
 
 
     @abstractmethod
-    def get_checkpoint(self) -> str:
+    def get_checkpoint(self) -> dict:
         """
         Load checkpoint.
 
@@ -25,7 +25,7 @@ class BaseCheckpoint(ABC):
 
 
     @abstractmethod
-    def save_checkpoint(self, value: str) -> None:
+    def save_checkpoint(self, checkpoint: dict) -> None:
         """
         Save checkpoint.
 

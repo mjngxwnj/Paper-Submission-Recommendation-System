@@ -1,9 +1,9 @@
 from data_ingestion.state.base_checkpoint import BaseCheckpoint
 from database.mongodb.helpers import upsert_one, read
 
-class MongoCheckpoint(BaseCheckpoint):
+class CheckpointManager(BaseCheckpoint):
 
-    def __init__(self, db, src: str, collection_name: str = "checkpoints"):
+    def __init__(self, db, src: str, collection_name: str = "test_checkpoints"):
         """
         Args:
             db: Optional MongoDB database/session object
@@ -16,7 +16,7 @@ class MongoCheckpoint(BaseCheckpoint):
         self._collection = self._db[self._collection_name]
 
 
-    def get_checkpoint(self) -> str:
+    def get_checkpoint(self) -> dict:
         """
         Get the last checkpoint for a given source.
 
@@ -24,12 +24,24 @@ class MongoCheckpoint(BaseCheckpoint):
             str: Last saved offset.
         """
 
-        checkpoint = read(collection = self._collection, filter = {'source': self._src})
+        checkpoint = read(collection=self._collection, filter={'source': self._src})
 
-        return checkpoint[0].get('offset', "") if checkpoint else ""
+        if checkpoint:
+            doc = checkpoint[0]
+            return {
+                "checkpoint_scrape": doc.get("checkpoint_scrape"),
+                "execution_date_new": doc.get("execution_date_new"),
+                "execution_date_old": doc.get("execution_date_old")
+            }
+
+        return {
+            "checkpoint_scrape": None,
+            "execution_date_new": None,
+            "execution_date_old": None
+        }
 
 
-    def save_checkpoint(self, value: str) -> None:
+    def save_checkpoint(self, checkpoint: dict) -> None:
         """
         Save checkpoint for a given source.
 
@@ -41,7 +53,7 @@ class MongoCheckpoint(BaseCheckpoint):
 
         upsert_one(collection = self._collection,
                    query = {'source': self._src},
-                   data = {'offset': value})
+                   data = checkpoint)
 
 
 

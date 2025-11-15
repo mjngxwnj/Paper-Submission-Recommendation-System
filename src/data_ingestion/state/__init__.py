@@ -1,2 +1,2 @@
 from .base_checkpoint import BaseCheckpoint
-from .mongo_checkpoint import MongoCheckpoint
+from .checkpoint_manager import CheckpointManager
