@@ -18,7 +18,7 @@ def add_execution_metadata(data: list[dict],
     """
 
     metadata = {
-        'execution_datetime': execution_datetime.isoformat(),
+        'execution_datetime': execution_datetime,
         'ingestion_source': source,
     }
 

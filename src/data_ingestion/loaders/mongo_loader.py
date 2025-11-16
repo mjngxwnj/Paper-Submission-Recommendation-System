@@ -5,7 +5,7 @@ from typing import Any
 
 class MongoLoader(BaseLoader):
 
-    def load(self, data: list[dict[str, Any]]) -> None:
+    def load_data(self, data: list[dict[str, Any]]) -> None:
         """
         Insert raw documents into the colllection.
         """

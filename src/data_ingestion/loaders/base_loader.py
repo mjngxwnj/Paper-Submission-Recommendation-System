@@ -16,7 +16,7 @@ class BaseLoader(ABC):
 
 
     @abstractmethod
-    def load(self, data: list[dict]) -> None:
+    def load_data(self, data: list[dict]) -> None:
         """
         Abstract method to load data into MongoDB.
 

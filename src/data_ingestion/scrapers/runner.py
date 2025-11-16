@@ -6,7 +6,7 @@ from data_ingestion.loaders import BaseLoader
 
 from database.mongodb.session import mongo_session
 
-from data_ingestion.utils import now, add_execution_metadata
+from data_ingestion.utils import today, add_execution_metadata
 
 def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoader],
                 batch_num: int, api_key: str, src: str) -> None:
@@ -30,7 +30,7 @@ def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoa
 
         #get checkpoint
         checkpoint : BaseCheckpoint = CheckpointManager(db, src)
-        last_checkpoint = checkpoint.get_checkpoint()['checkpoint_scrape']
+        last_checkpoint = checkpoint.get_checkpoint()['scrape_checkpoint']
 
         logging.info(f"Last checkpoint: {last_checkpoint}")
 
@@ -46,32 +46,31 @@ def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoa
                 #add execution metadata
                 enriched_data = add_execution_metadata(
                     data = data,
-                    execution_datetime = now(),
+                    execution_datetime = today(),
                     source = src
                 )
 
-                loader.load(enriched_data)
+                loader.load_data(enriched_data)
 
                 if new_checkpoint is not None:
                     last_checkpoint = new_checkpoint
 
-                logging.info(f"Batch {i+1}/{batch_num} completed, checkpoint: {last_checkpoint}")
+                logging.info(f"[Batch {i+1}/{batch_num}] completed. Checkpoint: {last_checkpoint}")
 
             except Exception as e:
-                print(f"[Batch {i+1}] Error occurred: {e}. Checkpoint: {last_checkpoint}")
+                logging.error(f"[Batch {i+1}/{batch_num}] error: {e}. Checkpoint: {last_checkpoint}")
 
                 raise
 
             finally:
 
                 checkpoint_info = {
-                    "checkpoint_scrape": last_checkpoint,
-                    "execution_date_new": now(),
+                    "scrape_checkpoint": last_checkpoint,
                 }
 
                 checkpoint.save_checkpoint(checkpoint_info)
 
-                logging.info(f"[Batch {i+1}] Checkpoint saved: {last_checkpoint}")
+                logging.info(f"[Batch {i+1}/{batch_num}] checkpoint saved: {last_checkpoint}")
 
         logging.info(f"Scrape completed. Final checkpoint: {last_checkpoint}")
 

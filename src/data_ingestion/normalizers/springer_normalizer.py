@@ -8,7 +8,6 @@ class SpringerNormalizer(BaseNormalizer):
         Pipeline steps:
         1. Transform fields:
             - Parse publicationDate into year, month, and day.
-            - Convert publicationType to lowercase.
             - Convert openaccess to Boolean.
             - Extract the first PDF link from url as abstractlink.
             - Split creators array into two separate lists: author and orcid.
@@ -84,7 +83,9 @@ class SpringerNormalizer(BaseNormalizer):
                     "abstract": 1,
                     "author": 1,
                     "orcid": 1,
-                    "target_venue": 1
+                    "target_venue": 1,
+                    "execution_datetime": 1,
+                    "ingestion_source": 1
                 }
             },
 
@@ -106,5 +107,5 @@ class SpringerNormalizer(BaseNormalizer):
         Return a list of field names that should have index in target collection.
         """
 
-        return ["doi"]
+        return ["doi", "execution_datetime"]
 

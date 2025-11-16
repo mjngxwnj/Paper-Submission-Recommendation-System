@@ -29,15 +29,13 @@ class CheckpointManager(BaseCheckpoint):
         if checkpoint:
             doc = checkpoint[0]
             return {
-                "checkpoint_scrape": doc.get("checkpoint_scrape"),
-                "execution_date_new": doc.get("execution_date_new"),
-                "execution_date_old": doc.get("execution_date_old")
+                "scrape_checkpoint": doc.get("scrape_checkpoint"),
+                "last_sync_date": doc.get("last_sync_date")
             }
 
         return {
-            "checkpoint_scrape": None,
-            "execution_date_new": None,
-            "execution_date_old": None
+            "scrape_checkpoint": None,
+            "last_sync_date": None
         }
 
 

@@ -1,3 +1,4 @@
+from datetime import datetime
 from abc import ABC, abstractmethod
 from database.mongodb.helpers import aggregate, ensure_index
 import pymongo
@@ -14,10 +15,10 @@ class BaseNormalizer(ABC):
         """
 
         self._db = db
-        self._collection_name = src
+        self._src_collection_name = src
         self._target_collection_name = target_src
 
-        self._collection = self._db[self._collection_name]
+        self._src_collection = self._db[self._src_collection_name]
         self._target_collection = self._db[self._target_collection_name]
 
 
@@ -39,7 +40,7 @@ class BaseNormalizer(ABC):
         pass
 
 
-    def normalize(self,):
+    def normalize_data(self, checkpoint: datetime | None = None):
         """
         Execute normalization an upsert.
         """
@@ -48,13 +49,21 @@ class BaseNormalizer(ABC):
 
         #ensure index
         for field in index_fields_list:
+            ensure_index(self._src_collection, field = field, unique = (field == 'doi'))
             ensure_index(self._target_collection, field = field, unique = (field == 'doi'))
 
+        pipeline = []
+
+        #incremental filter if chekcpoint exists
+        if checkpoint:
+            pipeline.append({
+                "$match": {"execution_datetime": {"$gt": checkpoint}}
+            })
+
+        pipeline.extend(self._get_pipeline())
+
         #build pipeline
-        pipeline = self._get_pipeline()
-        aggregate(self._collection, pipeline)
-
-
+        aggregate(self._src_collection, pipeline)
 
 
 
