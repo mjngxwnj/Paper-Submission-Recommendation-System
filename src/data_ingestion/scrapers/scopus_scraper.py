@@ -1,10 +1,12 @@
+from data_ingestion.scrapers.base_scraper import BaseScraper
 import requests
 import json
 import time
 import os
 from typing import Union
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-class ScopusScraper:
+class ScopusScraper(BaseScraper):
     def __init__(self):
         self.query = 'computer science'
         self.count_per_page = 25
@@ -62,14 +64,18 @@ class ScopusScraper:
                 print(f"Hết dữ liệu tại start={start}")
                 break
             
-            # Lấy abstract từ Article Retrieval API cho từng DOI
-            for record in records:
-                doi = record.get("prism:doi")
-                if doi:
-                    record['abstract'] = self.fetch_abstract(doi)
+            doi_list = [r.get("prism:doi") for r in records if r.get("prism:doi")]
+            abstracts_info = self.fetch_abstracts_parallel(doi_list, max_workers=10)
+
+            doi_map = {info["doi"]: info for info in abstracts_info}
+            for r in records:
+                doi = r.get("prism:doi")
+                if doi in doi_map:
+                    r["abstract"] = doi_map[doi]["abstract"]
+                    r["subjects"] = doi_map[doi]["subjects"]
+
             all_results.extend(records)
             checkpoint = start + self.count_per_page
-            time.sleep(0.1)
 
             # lưu tạm định kỳ
             if len(all_results) >= self.save_interval * (batch_num + 1):
@@ -96,6 +102,28 @@ class ScopusScraper:
             print(f"Đã xóa file tạm: {self.temp_file}")
 
         return all_results, f"{checkpoint}-{year_extract}"
+
+    def fetch_abstracts_parallel(self, doi_list: list[str], max_workers: int = 5) -> list[dict]:
+        """
+        Lấy abstract và subjects song song từ Article Retrieval API cho nhiều DOI.
+        Trả về list dict: [{"doi":..., "abstract":..., "subjects":...}, ...]
+        """
+        results = []
+
+        def fetch_single(doi):
+            abstract, subjects = self.fetch_abstract(doi)
+            return {"doi": doi, "abstract": abstract, "subjects": subjects}
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(fetch_single, doi) for doi in doi_list]
+            for future in as_completed(futures):
+                try:
+                    results.append(future.result())
+                except Exception as e:
+                    print(f"Error fetching abstract for DOI: {e}")
+
+        return results
+        
     def fetch_abstract(self, doi: str) -> tuple[str, Union[list[str], None]]:
         url = f"https://api.elsevier.com/content/article/doi/{doi}"
         headers = {"X-ELS-APIKey": self.api_key, "Accept": "application/json"}
@@ -108,8 +136,8 @@ class ScopusScraper:
                 subjects = data.get('full-text-retrieval-response', {}).get('coredata', {}).get('dcterms:subject')
                 return abstract, subjects
             else:
-                print(f"Lỗi lấy abstract cho DOI {doi}: {response.status_code}")
+                #print(f"Lỗi lấy abstract cho DOI {doi}: {response.status_code}")
                 return "", None
         except requests.exceptions.RequestException as e:
-            print(f"Lỗi request lấy abstract cho DOI {doi}: {e}")
+            #print(f"Lỗi request lấy abstract cho DOI {doi}: {e}")
             return "", None
