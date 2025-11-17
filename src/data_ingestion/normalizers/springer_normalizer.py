@@ -1,6 +1,7 @@
 from data_ingestion.normalizers import BaseNormalizer
 
 class SpringerNormalizer(BaseNormalizer):
+
     def _get_pipeline(self) -> list[dict]:
         """
         Returns the aggregation pipeline for normalizing Springer documents.

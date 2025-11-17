@@ -49,7 +49,7 @@ class BaseNormalizer(ABC):
 
         #ensure index
         for field in index_fields_list:
-            ensure_index(self._src_collection, field = field, unique = (field == 'doi'))
+            ensure_index(self._src_collection, field = field, unique = False)
             ensure_index(self._target_collection, field = field, unique = (field == 'doi'))
 
         pipeline = []
