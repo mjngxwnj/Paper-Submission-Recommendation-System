@@ -6,6 +6,7 @@ import os
 import requests
 import crossref.restful
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 class openAlexScraper(BaseScraper):
     FIELD = "Computer Science"
     FIELD_ID = "C41008148"
@@ -51,7 +52,25 @@ class openAlexScraper(BaseScraper):
                     print(f"Waitting {sleep_time} before retries")
                     time.sleep(sleep_time)
                 else: 
-                    return {"doi": doi,"abstract": None}      
+                    return {"doi": doi,"abstract": None}
+    def fetch_abstracts_parallel(self, doi_list: list[str], max_workers: int = 5) -> list[dict]:
+        """
+        Fetch abstract từ Crossref cho nhiều DOI song song bằng ThreadPoolExecutor.
+        """
+        results = []
+
+        def fetch_single(doi):
+            return self.get_abstract(doi)
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(fetch_single, doi) for doi in doi_list]
+            for future in as_completed(futures):
+                try:
+                    results.append(future.result())
+                except Exception as e:
+                    print(f"Error fetching abstract in thread: {e}")
+
+        return results      
     def fetch_data(self,api_key:str = "",checkpoint = "*") -> list[dict]:
         cursor = checkpoint
         print(f"Crawling OpenAlex for field: {self.FIELD}")
@@ -67,13 +86,15 @@ class openAlexScraper(BaseScraper):
                     print("No more records")
                     break
                 print(f"Crawl {len(work_list)} record number")
+                doi_list = [record.get("doi") for record in work_list if record.get("doi")]
+                if doi_list:
+                    abstracts = self.fetch_abstracts_parallel(doi_list, max_workers=5)
+                    abstract_map = {item["doi"]: item["abstract"] for item in abstracts}
+                else:
+                    abstract_map = {}
                 for record in work_list:
-                    doi = record.get("doi",None)
-                    if doi:
-                        abstract_data = self.get_abstract(doi)
-                        record["abstract"] = abstract_data.get("abstract",None)
-                    else:
-                        record["abstract"] = None
+                    doi = record.get("doi")
+                    record["abstract"] = abstract_map.get(doi) if doi else None
                     result.append(record)
                 end_time = time.time()
                 duration = end_time - start_time

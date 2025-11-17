@@ -61,7 +61,12 @@ class ScopusScraper:
             if not records:
                 print(f"Hết dữ liệu tại start={start}")
                 break
-
+            
+            # Lấy abstract từ Article Retrieval API cho từng DOI
+            for record in records:
+                doi = record.get("prism:doi")
+                if doi:
+                    record['abstract'] = self.fetch_abstract(doi)
             all_results.extend(records)
             checkpoint = start + self.count_per_page
             time.sleep(0.1)
@@ -91,4 +96,20 @@ class ScopusScraper:
             print(f"Đã xóa file tạm: {self.temp_file}")
 
         return all_results, f"{checkpoint}-{year_extract}"
+    def fetch_abstract(self, doi: str) -> tuple[str, Union[list[str], None]]:
+        url = f"https://api.elsevier.com/content/article/doi/{doi}"
+        headers = {"X-ELS-APIKey": self.api_key, "Accept": "application/json"}
 
+        try:
+            response = requests.get(url, headers=headers, timeout=self.timeout)
+            if response.status_code == 200:
+                data = response.json()
+                abstract = data.get("full-text-retrieval-response", {}).get("coredata", {}).get("dc:description", "")
+                subjects = data.get('full-text-retrieval-response', {}).get('coredata', {}).get('dcterms:subject')
+                return abstract, subjects
+            else:
+                print(f"Lỗi lấy abstract cho DOI {doi}: {response.status_code}")
+                return "", None
+        except requests.exceptions.RequestException as e:
+            print(f"Lỗi request lấy abstract cho DOI {doi}: {e}")
+            return "", None
