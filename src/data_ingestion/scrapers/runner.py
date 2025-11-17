@@ -60,8 +60,6 @@ def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoa
             except Exception as e:
                 logging.error(f"[Batch {i+1}/{batch_num}] error: {e}. Checkpoint: {last_checkpoint}")
 
-                raise
-
             finally:
 
                 checkpoint_info = {

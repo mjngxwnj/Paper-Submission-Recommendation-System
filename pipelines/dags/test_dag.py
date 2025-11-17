@@ -26,36 +26,34 @@ with DAG(
         op_kwargs = {
             'scraper_default': SpringerScraper,
             'loader_default': MongoLoader,
-            'batch_num': 1,
+            'batch_num': 25,
             'api_key': "b9ff350eae9f1cf54d61f5a69cf1927d",
-            'src': 'springer_test'
+            'src': 'springer'
         }
     )
 
-    normalizer_springer_task = PythonOperator(
-        task_id = "normalizer_springer_task",
-        python_callable = run_normalizer,
-        op_kwargs = {
-            'normalizer_default': SpringerNormalizer,
-            'src': 'springer_test',
-            'target_src': 'full_papers_test'
-        }
-    )
-
-    scrape_springer_task >> normalizer_springer_task
-
-#    scrape_openalex_task = PythonOperator(
-#        task_id = "scrape_openalex_task",
-#        python_callable = run_scraper,
+#    normalizer_springer_task = PythonOperator(
+#        task_id = "normalizer_springer_task",
+#        python_callable = run_normalizer,
 #        op_kwargs = {
-#            'scraper_default': openAlexScraper,
-#            'loader_default': MongoLoader,
-#            'batch_num': 1,
-#            'api_key': "",
-#            'src': 'openalex'
+#            'normalizer_default': SpringerNormalizer,
+#            'src': 'springer_test',
+#            'target_src': 'full_papers_test'
 #        }
 #    )
-#
+
+    scrape_openalex_task = PythonOperator(
+        task_id = "scrape_openalex_task",
+        python_callable = run_scraper,
+        op_kwargs = {
+            'scraper_default': openAlexScraper,
+            'loader_default': MongoLoader,
+            'batch_num': 10,
+            'api_key': '',
+            'src': 'openalex'
+        }
+    )
+
 #    scrape_scopus_task = PythonOperator(
 #        task_id = "scrape_scopus_task",
 #        python_callable = run_scraper,
