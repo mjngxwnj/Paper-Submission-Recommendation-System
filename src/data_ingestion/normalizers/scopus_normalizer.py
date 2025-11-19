@@ -22,6 +22,17 @@ class ScopusNormalizer(BaseNormalizer):
         """
         pipeline = [
             {
+                "$match": {
+                    "prism:doi": {
+                        "$exists": True,
+                        "$ne": None,
+                        "$ne": "",
+                        "$type": "string"
+                    }
+                }
+            },
+
+            {
                 "$addFields": {
                     "pubDate": { "$dateFromString": { "dateString": "$prism:coverDate" } },
 
@@ -53,8 +64,12 @@ class ScopusNormalizer(BaseNormalizer):
                     "keyword": {
                         "$map": {
                             "input": { "$ifNull": ["$subjects", []] },
-                            "as": "s",
-                            "in": "$$s.$"
+                            "in": {
+                                "$getField": {
+                                    "field": { "$literal": "$" },
+                                    "input": "$$this"
+                                }
+                            }
                         }
                     },
 

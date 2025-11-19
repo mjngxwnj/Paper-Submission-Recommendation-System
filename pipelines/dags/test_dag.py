@@ -9,7 +9,7 @@ from data_ingestion.scrapers import (
 from data_ingestion.loaders import MongoLoader
 
 from data_ingestion.normalizers import (
-    BaseNormalizer, SpringerNormalizer,
+    OpenalexNormalizer, SpringerNormalizer,
     ScopusNormalizer, run_normalizer
 )
 from datetime import datetime
@@ -27,29 +27,29 @@ with DAG(
     catchup=False
 ) as dag:
 
-    scrape_springer_task = PythonOperator(
-        task_id = "scrape_springer_task",
-        python_callable = run_scraper,
-        op_kwargs = {
-            'scraper_default': SpringerScraper,
-            'loader_default': MongoLoader,
-            'batch_num': 1,
-            'api_key': "b9ff350eae9f1cf54d61f5a69cf1927d",
-            'src': 'springer_test'
-        }
-    )
-
-#    scrape_openalex_task = PythonOperator(
-#        task_id = "scrape_openalex_task",
+#    scrape_springer_task = PythonOperator(
+#        task_id = "scrape_springer_task",
 #        python_callable = run_scraper,
 #        op_kwargs = {
-#            'scraper_default': openAlexScraper,
+#            'scraper_default': SpringerScraper,
 #            'loader_default': MongoLoader,
-#            'batch_num': 100,
-#            'api_key': '',
-#            'src': 'openalex'
+#            'batch_num': 10,
+#            'api_key': "b9ff350eae9f1cf54d61f5a69cf1927d",
+#            'src': 'springer_test'
 #        }
 #    )
+#
+    scrape_openalex_task = PythonOperator(
+        task_id = "scrape_openalex_task",
+        python_callable = run_scraper,
+        op_kwargs = {
+            'scraper_default': openAlexScraper,
+            'loader_default': MongoLoader,
+            'batch_num': 10,
+            'api_key': '',
+            'src': 'openalex'
+        }
+    )
 #
 #    scrape_scopus_task = PythonOperator(
 #        task_id = "scrape_scopus_task",
@@ -62,30 +62,42 @@ with DAG(
 #            'src': 'scopus_test'
 #        }
 #    )
-
-
-    normalizer_springer_task = PythonOperator(
-        task_id = "normalizer_springer_task",
+#
+#
+#    normalize_springer_task = PythonOperator(
+#        task_id = "normalize_springer_task",
+#        python_callable = run_normalizer,
+#        op_kwargs = {
+#            'normalizer_default': SpringerNormalizer,
+#            'src': 'springer_test',
+#            'target_src': 'full_papers_test'
+#        }
+#    )
+#
+#
+    normalize_openalex_task = PythonOperator(
+        task_id = "normalize_openalex_task",
         python_callable = run_normalizer,
         op_kwargs = {
-            'normalizer_default': SpringerNormalizer,
-            'src': 'springer_test',
-            'target_src': 'full_papers_test'
+            'normalizer_default': OpenalexNormalizer,
+            'src': 'openalex',
+            'target_src': 'full_papers_test_test'
         }
     )
 
-    normalizer_scopus_task = PythonOperator(
-        task_id = "normalizer_scopus_task",
-        python_callable = run_normalizer,
-        op_kwargs = {
-            'normalizer_default': ScopusNormalizer,
-            'src': 'scopus_test',
-            'target_src': 'full_papers_test'
-        }
-    )
-
-    scrape_springer_task >> normalizer_springer_task
-    normalizer_scopus_task
+#    normalize_scopus_task = PythonOperator(
+#        task_id = "normalize_scopus_task",
+#        python_callable = run_normalize,
+#        op_kwargs = {
+#            'normalize_default': Scopusnormalize,
+#            'src': 'scopus_test',
+#            'target_src': 'full_papers_test'
+#        }
+#    )
+#
+#    scrape_springer_task >> normalize_springer_task
+#    scrape_scopus_task >> normalizer_scopus_task
+#    scrape_openalex_task
 
 
 

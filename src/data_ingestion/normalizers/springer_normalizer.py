@@ -21,6 +21,17 @@ class SpringerNormalizer(BaseNormalizer):
 
         pipeline = [
             {
+                "$match": {
+                    "doi": {
+                        "$exists": True,
+                        "$ne": None,
+                        "$ne": "",
+                        "$type": "string"
+                    }
+                }
+            },
+
+            {
                 "$addFields": {
                     "pubDate": { "$dateFromString": { "dateString": "$publicationDate" } },
 
