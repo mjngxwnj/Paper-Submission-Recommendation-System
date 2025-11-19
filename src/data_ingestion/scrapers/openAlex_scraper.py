@@ -38,13 +38,15 @@ class openAlexScraper(BaseScraper):
             try:
                 data = abstrat_record.doi(doi)
                 if not data:
-                    return {"doi":doi,"abstract":None}
+                    return {"doi":doi,"abstract":None,"date":None}
                 abstract = data.get("abstract",None)
                 if abstract:
                     clean_abstract = re.sub("<[^<]+?>", "", abstract)
                 else:
                     clean_abstract = "None"
-                return {"doi":doi,"abstract":clean_abstract.strip()}
+                created = data.get("created",{})
+                date = created.get("date-time",None)
+                return {"doi":doi,"abstract":clean_abstract.strip(),"date":date}
             except Exception as e:
                 print(f"[Attempt {attempt}/{retries}] Lỗi khi lấy {doi}: {e}")
                 if attempt < retries:
@@ -52,7 +54,7 @@ class openAlexScraper(BaseScraper):
                     print(f"Waitting {sleep_time} before retries")
                     time.sleep(sleep_time)
                 else: 
-                    return {"doi": doi,"abstract": None}
+                    return {"doi": doi,"abstract": None,"date":None}
     def fetch_abstracts_parallel(self, doi_list: list[str], max_workers: int = 5) -> list[dict]:
         """
         Fetch abstract từ Crossref cho nhiều DOI song song bằng ThreadPoolExecutor.
@@ -89,12 +91,18 @@ class openAlexScraper(BaseScraper):
                 doi_list = [record.get("doi") for record in work_list if record.get("doi")]
                 if doi_list:
                     abstracts = self.fetch_abstracts_parallel(doi_list, max_workers=5)
-                    abstract_map = {item["doi"]: item["abstract"] for item in abstracts}
+                    abstract_map = {item["doi"]: item for item in abstracts}
                 else:
                     abstract_map = {}
                 for record in work_list:
                     doi = record.get("doi")
-                    record["abstract"] = abstract_map.get(doi) if doi else None
+                    info = abstract_map.get(doi,None)
+                    if info:
+                        record["abstract"] = info["abstract"]
+                        record["crossref_date"] = info["date"]
+                    else:
+                        record["abstract"] = None
+                        record["crossref_date"] = None
                     result.append(record)
                 end_time = time.time()
                 duration = end_time - start_time
