@@ -25,9 +25,8 @@ class ScopusNormalizer(BaseNormalizer):
                 "$match": {
                     "prism:doi": {
                         "$exists": True,
-                        "$ne": None,
-                        "$ne": "",
-                        "$type": "string"
+                        "$type": "string",
+                        "$nin": [None, "", "None"]
                     }
                 }
             },

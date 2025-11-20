@@ -1,17 +1,14 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.utils.trigger_rule import TriggerRule
 
-from data_ingestion.scrapers import (
-    openAlexScraper, SpringerScraper,
-    ScopusScraper, run_scraper
-)
-
+from data_ingestion.scrapers import openAlexScraper, SpringerScraper, ScopusScraper
 from data_ingestion.loaders import MongoLoader
+from data_ingestion.normalizers import OpenalexNormalizer, SpringerNormalizer, ScopusNormalizer
 
-from data_ingestion.normalizers import (
-    OpenalexNormalizer, SpringerNormalizer,
-    ScopusNormalizer, run_normalizer
-)
+from integration.airflow.conn_config import get_springer_api_key, get_scopus_api_key
+from runners import run_scraper, run_normalizer
+
 from datetime import datetime
 
 default_args = {
@@ -27,96 +24,77 @@ with DAG(
     catchup=False
 ) as dag:
 
-#    scrape_springer_task = PythonOperator(
-#        task_id = "scrape_springer_task",
-#        python_callable = run_scraper,
-#        op_kwargs = {
-#            'scraper_default': SpringerScraper,
-#            'loader_default': MongoLoader,
-#            'batch_num': 10,
-#            'api_key': "b9ff350eae9f1cf54d61f5a69cf1927d",
-#            'src': 'springer_test'
-#        }
-#    )
-#
+    scrape_springer_task = PythonOperator(
+        task_id = "scrape_springer_task",
+        python_callable = run_scraper,
+        op_kwargs = {
+            'scraper_default': SpringerScraper,
+            'loader_default': MongoLoader,
+            'batch_num': 25,
+            'api_key': get_springer_api_key(),
+            'src': 'springer'
+        }
+    )
+
     scrape_openalex_task = PythonOperator(
         task_id = "scrape_openalex_task",
         python_callable = run_scraper,
         op_kwargs = {
             'scraper_default': openAlexScraper,
             'loader_default': MongoLoader,
-            'batch_num': 10,
+            'batch_num': 100,
             'api_key': '',
             'src': 'openalex'
         }
     )
-#
-#    scrape_scopus_task = PythonOperator(
-#        task_id = "scrape_scopus_task",
-#        python_callable = run_scraper,
-#        op_kwargs = {
-#            'scraper_default': ScopusScraper,
-#            'loader_default': MongoLoader,
-#            'batch_num': 100,
-#            'api_key': "58f0c056352500c8175e0418b08a4c4e",
-#            'src': 'scopus_test'
-#        }
-#    )
-#
-#
-#    normalize_springer_task = PythonOperator(
-#        task_id = "normalize_springer_task",
-#        python_callable = run_normalizer,
-#        op_kwargs = {
-#            'normalizer_default': SpringerNormalizer,
-#            'src': 'springer_test',
-#            'target_src': 'full_papers_test'
-#        }
-#    )
-#
-#
-    normalize_openalex_task = PythonOperator(
-        task_id = "normalize_openalex_task",
-        python_callable = run_normalizer,
+
+    scrape_scopus_task = PythonOperator(
+        task_id = "scrape_scopus_task",
+        python_callable = run_scraper,
         op_kwargs = {
-            'normalizer_default': OpenalexNormalizer,
-            'src': 'openalex',
-            'target_src': 'full_papers_test_test'
+            'scraper_default': ScopusScraper,
+            'loader_default': MongoLoader,
+            'batch_num': 100,
+            'api_key': get_scopus_api_key(),
+            'src': 'scopus'
         }
     )
 
-#    normalize_scopus_task = PythonOperator(
-#        task_id = "normalize_scopus_task",
-#        python_callable = run_normalize,
-#        op_kwargs = {
-#            'normalize_default': Scopusnormalize,
-#            'src': 'scopus_test',
-#            'target_src': 'full_papers_test'
-#        }
-#    )
-#
-#    scrape_springer_task >> normalize_springer_task
-#    scrape_scopus_task >> normalizer_scopus_task
-#    scrape_openalex_task
 
+    normalize_springer_task = PythonOperator(
+        task_id = "normalize_springer_task",
+        python_callable = run_normalizer,
+        trigger_rule = TriggerRule.ALL_DONE,
+        op_kwargs = {
+            'normalizer_default': SpringerNormalizer,
+            'src': 'springer',
+            'target_src': 'full_papers'
+        }
+    )
 
+    normalize_openalex_task = PythonOperator(
+        task_id = "normalize_openalex_task",
+        python_callable = run_normalizer,
+        trigger_rule = TriggerRule.ALL_DONE,
+        op_kwargs = {
+            'normalizer_default': OpenalexNormalizer,
+            'src': 'openalex',
+            'target_src': 'full_papers'
+        }
+    )
 
-#    normalizer_sourceA_task = PythonOperator(
-#        task_id = "normalizer_sourceA_task",
-#        python_callable = run_normalizer,
-#        op_args = [SourceANormalizer, "srcA", "full_papers"]
-#    )
-#
-#    normalizer_sourceB_task = PythonOperator(
-#        task_id = "normalizer_sourceB_task",
-#        python_callable = run_normalizer,
-#        op_args = [SourceBNormalizer, "srcB", "full_papers"]
-#    )
-#
-#    scrape_sourceA_task >> normalizer_sourceA_task
-#    scrape_sourceB_task >> normalizer_sourceB_task
-#
-#    test_postgres_connection = PythonOperator(
-#        task_id = 'test_postgres_connection',
-#        python_callable = run_processing
-#    )
+    normalize_scopus_task = PythonOperator(
+        task_id = "normalize_scopus_task",
+        python_callable = run_normalizer,
+        trigger_rule = TriggerRule.ALL_DONE,
+        op_kwargs = {
+            'normalizer_default': ScopusNormalizer,
+            'src': 'scopus',
+            'target_src': 'full_papers'
+        }
+    )
+
+    scrape_springer_task >> normalize_springer_task
+    scrape_openalex_task >> normalize_openalex_task
+    scrape_scopus_task >> normalize_scopus_task
+

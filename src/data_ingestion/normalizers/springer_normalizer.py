@@ -24,9 +24,8 @@ class SpringerNormalizer(BaseNormalizer):
                 "$match": {
                     "doi": {
                         "$exists": True,
-                        "$ne": None,
-                        "$ne": "",
-                        "$type": "string"
+                        "$type": "string",
+                        "$nin": [None, "", "None"]
                     }
                 }
             },
@@ -105,7 +104,7 @@ class SpringerNormalizer(BaseNormalizer):
                 "$merge": {
                     "into": self._target_collection_name,
                     "on": "doi",
-                    "whenMatched": "keepExisting",
+                    "whenMatched": "replace",
                     "whenNotMatched": "insert"
                 }
             }

@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from database.mongodb.connection import MongoDBConnector
-from integration.airflow import get_mongo_conn
+from integration.airflow.conn_config import get_mongo_conn
 
 @contextmanager
 def mongo_session():

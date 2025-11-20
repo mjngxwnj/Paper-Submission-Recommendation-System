@@ -3,7 +3,7 @@ from database.mongodb.helpers import upsert_one, read
 
 class CheckpointManager(BaseCheckpoint):
 
-    def __init__(self, db, src: str, collection_name: str = "test_checkpoints"):
+    def __init__(self, db, src: str, collection_name: str = "checkpoints"):
         """
         Args:
             db: Optional MongoDB database/session object
