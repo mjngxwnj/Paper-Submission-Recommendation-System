@@ -75,62 +75,79 @@ class ScopusScraper(BaseScraper):
         """
         self.api_key = api_key
         all_results = []
-
+        batch_num = 0
         start, year, kw_idx = map(int, checkpoint.split("-"))
-        if year < 1980:
-            print("Đã crawl hết tất cả năm và keyword")
-            return all_results, checkpoint
+        print("Bắt đầu crawl Scopus API...\n")
 
-        keyword = self.keywords[kw_idx]
-        url = "https://api.elsevier.com/content/search/scopus"
-        query = f'TITLE-ABS-KEY("{keyword}") AND PUBYEAR = {year}'
-        params = {"query": query, "count": self.count_per_page, "start": start}
-        headers = {"X-ELS-APIKey": self.api_key, "Accept": "application/json"}
+        for _ in range(self.max_requests):
+            if year < 1980:
+                print("Đã crawl hết tất cả năm và keyword")
+                return all_results, checkpoint
 
-        for attempt in range(2):
-            try:
-                response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
-                break
-            except requests.exceptions.RequestException as e:
-                print(f"Lỗi request start={start}, keyword='{keyword}', year={year}: {e}, thử lại...")
-                time.sleep(self.retry_delay)
-        else:
-            print(f"Bỏ qua batch start={start} sau khi retry thất bại")
-            return all_results, checkpoint
+            keyword = self.keywords[kw_idx]
+            url = "https://api.elsevier.com/content/search/scopus"
+            query = f'TITLE-ABS-KEY("{keyword}") AND PUBYEAR = {year}'
+            params = {"query": query, "count": self.count_per_page, "start": start}
+            headers = {"X-ELS-APIKey": self.api_key, "Accept": "application/json"}
 
-        if response.status_code == 429:
-            print(f"Rate limit exceeded tại start={start}, keyword='{keyword}', year={year}, chờ 10s...")
-            time.sleep(10)
-            return all_results, checkpoint
-        elif response.status_code != 200:
-            print(f"Lỗi {response.status_code}: {response.text}")
-            return all_results, checkpoint
+            for attempt in range(2):
+                try:
+                    response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
+                    break
+                except requests.exceptions.RequestException as e:
+                    print(f"Lỗi request start={start}, keyword='{keyword}', year={year}: {e}, thử lại...")
+                    time.sleep(self.retry_delay)
+            else:
+                print(f"Bỏ qua batch start={start} sau khi retry thất bại")
+                return all_results, checkpoint
 
-        data = response.json()
-        records = data.get("search-results", {}).get("entry", [])
-        if not records:
-            print(f"Hết dữ liệu tại start={start}, keyword='{keyword}', year={year}")
+            if response.status_code == 429:
+                print(f"Rate limit exceeded tại start={start}, keyword='{keyword}', year={year}, chờ 10s...")
+                time.sleep(10)
+                return all_results, checkpoint
+            elif response.status_code != 200:
+                print(f"Lỗi {response.status_code}: {response.text}")
+                return all_results, checkpoint
 
-        doi_list = [r.get("prism:doi") for r in records if r.get("prism:doi")]
-        abstracts_info = self.fetch_abstracts_parallel(doi_list, max_workers=10)
-        doi_map = {info["doi"]: info for info in abstracts_info}
+            data = response.json()
+            records = data.get("search-results", {}).get("entry", [])
+            if not records:
+                print(f"Hết dữ liệu tại start={start}, keyword='{keyword}', year={year}")
 
-        for r in records:
-            doi = r.get("prism:doi")
-            if doi in doi_map:
-                r["abstract"] = doi_map[doi]["abstract"]
-                r["subjects"] = doi_map[doi]["subjects"]
+            doi_list = [r.get("prism:doi") for r in records if r.get("prism:doi")]
+            abstracts_info = self.fetch_abstracts_parallel(doi_list, max_workers=10)
+            doi_map = {info["doi"]: info for info in abstracts_info}
 
-        all_results.extend(records)
+            for r in records:
+                doi = r.get("prism:doi")
+                if doi in doi_map:
+                    r["abstract"] = doi_map[doi]["abstract"]
+                    r["subjects"] = doi_map[doi]["subjects"]
 
-        # cập nhật checkpoint cho lần crawl tiếp theo
-        start += self.count_per_page
-        if start >= 5000:
-            start = 0
-            kw_idx += 1
-            if kw_idx >= len(self.keywords):
-                kw_idx = 0
-                year -= 1
+            all_results.extend(records)
+            checkpoint = start + self.count_per_page
+
+            # lưu tạm định kỳ
+            if len(all_results) >= self.save_interval * (batch_num + 1):
+                with open(self.temp_file, "w", encoding="utf-8") as f:
+                    json.dump(all_results, f, ensure_ascii=False, indent=2)
+                print(f"Đã lưu tạm {len(all_results)} record vào {self.temp_file}")
+                batch_num += 1
+
+            # cập nhật checkpoint cho lần crawl tiếp theo
+            start += self.count_per_page
+            if start >= 5000:
+                start = 0
+                kw_idx += 1
+                if kw_idx >= len(self.keywords):
+                    kw_idx = 0
+                    year -= 1
+                    
+        if os.path.exists(self.temp_file):
+            os.remove(self.temp_file)
+            print(f"Đã xóa file tạm: {self.temp_file}")
+
+        print(f"Tổng cộng đã crawl: {len(all_results)} record")
 
         new_checkpoint = f"{start}-{year}-{kw_idx}"
         return all_results, new_checkpoint
