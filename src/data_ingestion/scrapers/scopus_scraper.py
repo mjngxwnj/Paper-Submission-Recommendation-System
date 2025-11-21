@@ -62,27 +62,32 @@ class ScopusScraper(BaseScraper):
             "bioinformatics CS", "computational neuroscience", "cryptanalysis CS"
         ]
         self.count_per_page = 25
-        self.max_requests = 20
+        self.max_requests = 20  
         self.timeout = 20
         self.retry_delay = 10
-        self.save_interval = 100
+        self.save_interval = 100  
         self.temp_file = "scopus_temp.json"
 
-    def fetch_data(self, api_key: str, checkpoint: str = "0-2026-0") -> tuple[list[dict], str]:
-        """
-        checkpoint format: start-year-keyword_idx
-        Crawl tuần tự theo checkpoint, mỗi lần 1 batch.
-        """
+    def fetch_data(self, api_key: str, checkpoint: Union[int, str] = "0-2026-0") -> tuple[list[dict], Union[int, str]]:
         self.api_key = api_key
         all_results = []
         batch_num = 0
+        
         start, year, kw_idx = map(int, checkpoint.split("-"))
+
         print("Bắt đầu crawl Scopus API...\n")
 
         for _ in range(self.max_requests):
             if year < 1980:
                 print("Đã crawl hết tất cả năm và keyword")
-                return all_results, checkpoint
+                return all_results, f"{checkpoint}-{year}-{kw_idx}"
+
+            if start >= 5000:
+                start = 0
+                kw_idx += 1
+                if kw_idx >= len(self.keywords):
+                    kw_idx = 0
+                    year -= 1
 
             keyword = self.keywords[kw_idx]
             url = "https://api.elsevier.com/content/search/scopus"
@@ -90,34 +95,38 @@ class ScopusScraper(BaseScraper):
             params = {"query": query, "count": self.count_per_page, "start": start}
             headers = {"X-ELS-APIKey": self.api_key, "Accept": "application/json"}
 
+            # retry khi lỗi request
             for attempt in range(2):
                 try:
                     response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
                     break
                 except requests.exceptions.RequestException as e:
-                    print(f"Lỗi request start={start}, keyword='{keyword}', year={year}: {e}, thử lại...")
+                    print(f"Lỗi request tại start={start}: {e}, thử lại...")
                     time.sleep(self.retry_delay)
             else:
                 print(f"Bỏ qua batch start={start} sau khi retry thất bại")
-                return all_results, checkpoint
+                start += self.count_per_page
+                continue
 
             if response.status_code == 429:
-                print(f"Rate limit exceeded tại start={start}, keyword='{keyword}', year={year}, chờ 10s...")
+                print(f"Rate limit exceeded (429) tại start={start}, chờ 10s...")
                 time.sleep(10)
-                return all_results, checkpoint
+                continue
             elif response.status_code != 200:
                 print(f"Lỗi {response.status_code}: {response.text}")
-                return all_results, checkpoint
+                break
 
             data = response.json()
             records = data.get("search-results", {}).get("entry", [])
             if not records:
-                print(f"Hết dữ liệu tại start={start}, keyword='{keyword}', year={year}")
+                print(f"Hết dữ liệu tại start={start}")
+                start = 5000
+                continue
 
             doi_list = [r.get("prism:doi") for r in records if r.get("prism:doi")]
             abstracts_info = self.fetch_abstracts_parallel(doi_list, max_workers=10)
-            doi_map = {info["doi"]: info for info in abstracts_info}
 
+            doi_map = {info["doi"]: info for info in abstracts_info}
             for r in records:
                 doi = r.get("prism:doi")
                 if doi in doi_map:
@@ -125,7 +134,8 @@ class ScopusScraper(BaseScraper):
                     r["subjects"] = doi_map[doi]["subjects"]
 
             all_results.extend(records)
-            checkpoint = start + self.count_per_page
+
+            start += self.count_per_page
 
             # lưu tạm định kỳ
             if len(all_results) >= self.save_interval * (batch_num + 1):
@@ -134,25 +144,29 @@ class ScopusScraper(BaseScraper):
                 print(f"Đã lưu tạm {len(all_results)} record vào {self.temp_file}")
                 batch_num += 1
 
-            # cập nhật checkpoint cho lần crawl tiếp theo
-            start += self.count_per_page
-            if start >= 5000:
-                start = 0
-                kw_idx += 1
-                if kw_idx >= len(self.keywords):
-                    kw_idx = 0
-                    year -= 1
-                    
+        if all_results:
+            with open(self.temp_file, "w", encoding="utf-8") as f:
+                json.dump(all_results, f, ensure_ascii=False, indent=2)
+            print(f"Đã lưu tạm cuối: {len(all_results)} record")
+
+        # cuối cùng lưu tất cả
+        filename_all = "scopus_all.json"
+        with open(filename_all, "w", encoding="utf-8") as f:
+            json.dump(all_results, f, ensure_ascii=False, indent=2)
+        print(f"Tổng cộng đã crawl: {len(all_results)} record, lưu vào {filename_all}")
+
+        # xóa file tạm nếu muốn
         if os.path.exists(self.temp_file):
             os.remove(self.temp_file)
             print(f"Đã xóa file tạm: {self.temp_file}")
 
-        print(f"Tổng cộng đã crawl: {len(all_results)} record")
-
-        new_checkpoint = f"{start}-{year}-{kw_idx}"
-        return all_results, new_checkpoint
+        return all_results, f"{checkpoint}-{year}-{kw_idx}"
 
     def fetch_abstracts_parallel(self, doi_list: list[str], max_workers: int = 5) -> list[dict]:
+        """
+        Lấy abstract và subjects song song từ Article Retrieval API cho nhiều DOI.
+        Trả về list dict: [{"doi":..., "abstract":..., "subjects":...}, ...]
+        """
         results = []
 
         def fetch_single(doi):
@@ -168,7 +182,7 @@ class ScopusScraper(BaseScraper):
                     print(f"Error fetching abstract for DOI: {e}")
 
         return results
-
+        
     def fetch_abstract(self, doi: str) -> tuple[str, Union[list[str], None]]:
         url = f"https://api.elsevier.com/content/article/doi/{doi}"
         headers = {"X-ELS-APIKey": self.api_key, "Accept": "application/json"}
@@ -181,6 +195,8 @@ class ScopusScraper(BaseScraper):
                 subjects = data.get('full-text-retrieval-response', {}).get('coredata', {}).get('dcterms:subject')
                 return abstract, subjects
             else:
+                #print(f"Lỗi lấy abstract cho DOI {doi}: {response.status_code}")
                 return "", None
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
+            #print(f"Lỗi request lấy abstract cho DOI {doi}: {e}")
             return "", None
