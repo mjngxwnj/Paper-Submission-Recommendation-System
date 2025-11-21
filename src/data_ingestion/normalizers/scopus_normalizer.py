@@ -27,7 +27,13 @@ class ScopusNormalizer(BaseNormalizer):
                         "$exists": True,
                         "$type": "string",
                         "$nin": [None, "", "None"]
+                    },
+                    "abstract": {
+                        "$exists": True,
+                        "$type": "string",
+                        "$nin": [None, "", "None"]
                     }
+
                 }
             },
 

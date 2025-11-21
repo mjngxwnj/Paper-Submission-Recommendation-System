@@ -24,30 +24,30 @@ with DAG(
     catchup=False
 ) as dag:
 
-    scrape_springer_task = PythonOperator(
-        task_id = "scrape_springer_task",
-        python_callable = run_scraper,
-        op_kwargs = {
-            'scraper_default': SpringerScraper,
-            'loader_default': MongoLoader,
-            'batch_num': 25,
-            'api_key': get_springer_api_key(),
-            'src': 'springer'
-        }
-    )
-
-    scrape_openalex_task = PythonOperator(
-        task_id = "scrape_openalex_task",
-        python_callable = run_scraper,
-        op_kwargs = {
-            'scraper_default': openAlexScraper,
-            'loader_default': MongoLoader,
-            'batch_num': 100,
-            'api_key': '',
-            'src': 'openalex'
-        }
-    )
-
+#    scrape_springer_task = PythonOperator(
+#        task_id = "scrape_springer_task",
+#        python_callable = run_scraper,
+#        op_kwargs = {
+#            'scraper_default': SpringerScraper,
+#            'loader_default': MongoLoader,
+#            'batch_num': 25,
+#            'api_key': get_springer_api_key(),
+#            'src': 'springer'
+#        }
+#    )
+#
+#    scrape_openalex_task = PythonOperator(
+#        task_id = "scrape_openalex_task",
+#        python_callable = run_scraper,
+#        op_kwargs = {
+#            'scraper_default': openAlexScraper,
+#            'loader_default': MongoLoader,
+#            'batch_num': 100,
+#            'api_key': '',
+#            'src': 'openalex'
+#        }
+#    )
+#
     scrape_scopus_task = PythonOperator(
         task_id = "scrape_scopus_task",
         python_callable = run_scraper,
@@ -61,40 +61,40 @@ with DAG(
     )
 
 
-    normalize_springer_task = PythonOperator(
-        task_id = "normalize_springer_task",
-        python_callable = run_normalizer,
-        trigger_rule = TriggerRule.ALL_DONE,
-        op_kwargs = {
-            'normalizer_default': SpringerNormalizer,
-            'src': 'springer',
-            'target_src': 'full_papers'
-        }
-    )
-
-    normalize_openalex_task = PythonOperator(
-        task_id = "normalize_openalex_task",
-        python_callable = run_normalizer,
-        trigger_rule = TriggerRule.ALL_DONE,
-        op_kwargs = {
-            'normalizer_default': OpenalexNormalizer,
-            'src': 'openalex',
-            'target_src': 'full_papers'
-        }
-    )
-
-    normalize_scopus_task = PythonOperator(
-        task_id = "normalize_scopus_task",
-        python_callable = run_normalizer,
-        trigger_rule = TriggerRule.ALL_DONE,
-        op_kwargs = {
-            'normalizer_default': ScopusNormalizer,
-            'src': 'scopus',
-            'target_src': 'full_papers'
-        }
-    )
-
-    scrape_springer_task >> normalize_springer_task
-    scrape_openalex_task >> normalize_openalex_task
-    scrape_scopus_task >> normalize_scopus_task
-
+#    normalize_springer_task = PythonOperator(
+#        task_id = "normalize_springer_task",
+#        python_callable = run_normalizer,
+#        trigger_rule = TriggerRule.ALL_DONE,
+#        op_kwargs = {
+#            'normalizer_default': SpringerNormalizer,
+#            'src': 'springer',
+#            'target_src': 'full_papers'
+#        }
+#    )
+#
+#    normalize_openalex_task = PythonOperator(
+#        task_id = "normalize_openalex_task",
+#        python_callable = run_normalizer,
+#        trigger_rule = TriggerRule.ALL_DONE,
+#        op_kwargs = {
+#            'normalizer_default': OpenalexNormalizer,
+#            'src': 'openalex',
+#            'target_src': 'full_papers'
+#        }
+#    )
+#
+#    normalize_scopus_task = PythonOperator(
+#        task_id = "normalize_scopus_task",
+#        python_callable = run_normalizer,
+#        trigger_rule = TriggerRule.ALL_DONE,
+#        op_kwargs = {
+#            'normalizer_default': ScopusNormalizer,
+#            'src': 'scopus',
+#            'target_src': 'full_papers'
+#        }
+#    )
+#
+#    scrape_springer_task >> normalize_springer_task
+#    scrape_openalex_task >> normalize_openalex_task
+#    scrape_scopus_task >> normalize_scopus_task
+#
