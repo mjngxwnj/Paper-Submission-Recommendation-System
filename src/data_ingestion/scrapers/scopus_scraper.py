@@ -160,7 +160,7 @@ class ScopusScraper(BaseScraper):
             os.remove(self.temp_file)
             print(f"Đã xóa file tạm: {self.temp_file}")
 
-        return all_results, f"{checkpoint}-{year}-{kw_idx}"
+        return all_results, f"{start}-{year}-{kw_idx}"
 
     def fetch_abstracts_parallel(self, doi_list: list[str], max_workers: int = 5) -> list[dict]:
         """
