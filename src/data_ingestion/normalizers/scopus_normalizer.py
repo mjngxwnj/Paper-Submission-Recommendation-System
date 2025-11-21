@@ -33,7 +33,6 @@ class ScopusNormalizer(BaseNormalizer):
                         "$type": "string",
                         "$nin": [None, "", "None"]
                     }
-
                 }
             },
 
