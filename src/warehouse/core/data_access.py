@@ -100,7 +100,8 @@ class WarehouseDataAccess:
                data: pd.DataFrame,
                conflict_keys: list[str],
                update_cols: list[str] | None = None,
-               batch_size: int = 100000) -> None:
+               batch_size: int = 100000,
+               overwrite: bool = True) -> None:
         """
         Upsert data into a table.
 
@@ -110,10 +111,13 @@ class WarehouseDataAccess:
             conflict_keys (list[str]): columns to detect conflict
             update_cols (list[str]): columns to update on conflict
             batch_size (int): rows per batch
+            overwrite (bool): True -> update on conflict, False -> do nothing
         """
         if data.empty:
             logging.info(f"No data to upsert into {table}")
             return
+
+        table = self._get_table(table)
 
         columns = data.columns.to_list()
         conflict_target = ', '.join(conflict_keys)
@@ -123,13 +127,17 @@ class WarehouseDataAccess:
         else:
             cols_to_update = update_cols
 
-        update_set = ', '.join([f"{c} = EXCLUDED.{c}" for c in cols_to_update])
+        if overwrite and cols_to_update:
+            update_set = ', '.join([f"{c} = EXCLUDED.{c}" for c in cols_to_update])
+            conflict_action = f"DO UPDATE SET {update_set}"
+        else:
+            conflict_action = "DO NOTHING"
 
         sql = f"""
         INSERT INTO {table} ({', '.join(columns)})
         VALUES %s
         ON CONFLICT ({conflict_target})
-        DO UPDATE SET {update_set}
+        {conflict_action}
         """
 
         records = [tuple(row) for row in data.values]

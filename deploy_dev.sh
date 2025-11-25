@@ -74,7 +74,7 @@ success "Airflow is healthy!"
 #  --conn-port 5432 \
 #  --conn-login admin \
 #  --conn-password admin \
-#  --conn-schema mydb) >/dev/null 2>&1
+#  --conn-schema rcm_papers) >/dev/null 2>&1
 #success "PostgreSQL connection configured."
 #
 #info "  4.3: Configuring Springer API connection..."

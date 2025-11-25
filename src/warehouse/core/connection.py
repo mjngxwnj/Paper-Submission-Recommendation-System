@@ -1,11 +1,11 @@
-import psycopg
+import psycopg2
 import time
 import logging
 
 class PostgresConnector:
     def __init__(self, host: str = 'localhost',
                        port: int = 5432,
-                       db_name: str = 'default',
+                       db_name: str = 'rcm_papers',
                        username: str | None = None,
                        password: str | None = None,
                        connect_timeout: int = 5):
@@ -37,7 +37,7 @@ class PostgresConnector:
         target_db = db_name or self._db_name
         try:
             start_time = time.time()
-            self._conn = psycopg.connect(
+            self._conn = psycopg2.connect(
                 host = self._host,
                 port = self._port,
                 dbname = target_db,
