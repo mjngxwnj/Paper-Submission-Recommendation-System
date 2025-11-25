@@ -155,7 +155,7 @@ def aggregate(collection: Collection, pipeline: list[dict]):
         pipeline (list[dict]): List of aggregation stages.
     """
 
-    validate_type(collection, Collection, "collectin")
+    validate_type(collection, Collection, "collection")
     validate_type(pipeline, list, "pipeline")
 
     try:

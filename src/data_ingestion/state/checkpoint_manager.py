@@ -1,5 +1,5 @@
 from data_ingestion.state.base_checkpoint import BaseCheckpoint
-from database.mongodb.helpers import upsert_one, read
+from database.helpers import upsert_one, read
 
 class CheckpointManager(BaseCheckpoint):
 

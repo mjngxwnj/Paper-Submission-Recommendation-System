@@ -1,6 +1,6 @@
 from datetime import datetime
 from abc import ABC, abstractmethod
-from database.mongodb.helpers import aggregate, ensure_index
+from database.helpers import aggregate, ensure_index
 import pymongo
 
 class BaseNormalizer(ABC):

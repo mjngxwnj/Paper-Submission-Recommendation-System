@@ -4,5 +4,5 @@ import pandas as pd
 class BaseTransformer(ABC):
 
     @abstractmethod
-    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+    def transform_dimensions(self, df: pd.DataFrame) -> dict[str, pd.DataFrame]:
         pass

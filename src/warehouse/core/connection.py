@@ -26,7 +26,6 @@ class PostgresConnector:
         self._username = username
         self._password = password
         self._connect_timeout = connect_timeout
-
         self._conn = None
 
 

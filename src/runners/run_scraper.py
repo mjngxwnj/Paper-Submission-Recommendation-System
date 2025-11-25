@@ -2,13 +2,13 @@ import logging
 
 from data_ingestion.state import BaseCheckpoint, CheckpointManager
 from data_ingestion.scrapers import BaseScraper
-from data_ingestion.loaders import BaseLoader
 
-from database.mongodb.session import mongo_session
+from database.data_access import MongoDataAccess
+from database.session import mongo_session
 
 from data_ingestion.utils import today, add_execution_metadata
 
-def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoader],
+def run_scraper(scraper_default: type[BaseScraper],
                 batch_num: int, api_key: str, src: str) -> None:
     """
     Run a scraping job for a given scraper and loader, handling checkpoints and errors.
@@ -26,7 +26,7 @@ def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoa
 
     with mongo_session() as db:
         scraper : BaseScraper = scraper_default()
-        loader : BaseLoader = loader_default(db, src)
+        data_access = MongoDataAccess(db, src)
 
         #get checkpoint
         checkpoint : BaseCheckpoint = CheckpointManager(db, src)
@@ -50,7 +50,7 @@ def run_scraper(scraper_default: type[BaseScraper], loader_default: type[BaseLoa
                     source = src
                 )
 
-                loader.load_data(enriched_data)
+                data_access.load_data(enriched_data)
 
                 if new_checkpoint is not None:
                     last_checkpoint = new_checkpoint

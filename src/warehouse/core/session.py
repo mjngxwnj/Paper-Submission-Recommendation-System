@@ -1,10 +1,10 @@
 from contextlib import contextmanager
 import logging
-from database.postgres.connection import PostgresConnector
-from integration.airflow import get_postgres_conn
+from warehouse.core.connection import PostgresConnector
+from integration.airflow.conn_config import get_postgres_conn
 
 @contextmanager
-def postgres_session(db_name: str | None = None, autocommit: bool = False):
+def postgres_session(db_name: str | None = None):
     """
     Context manager to manage Postgres connection and cursor.
 
@@ -17,22 +17,17 @@ def postgres_session(db_name: str | None = None, autocommit: bool = False):
 
     pg = PostgresConnector(**get_postgres_conn())
     conn = pg.connect(db_name)
-    conn.autocommit = autocommit
 
     try:
         with conn.cursor() as cursor:
             yield cursor
 
-        if not autocommit:
-            conn.commit()
+        conn.commit()
 
     except Exception as e:
-        if not autocommit:
-            conn.rollback()
-
+        conn.rollback()
         logging.error(f"Transaction rolled back: {e}")
         raise
 
     finally:
         pg.close()
-

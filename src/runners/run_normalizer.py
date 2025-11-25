@@ -4,7 +4,7 @@ from data_ingestion import normalizers
 from data_ingestion.state import BaseCheckpoint, CheckpointManager
 
 from data_ingestion.normalizers import BaseNormalizer
-from database.mongodb.session import mongo_session
+from database.session import mongo_session
 from data_ingestion.utils import today
 
 def run_normalizer(normalizer_default: type[BaseNormalizer], src: str,
