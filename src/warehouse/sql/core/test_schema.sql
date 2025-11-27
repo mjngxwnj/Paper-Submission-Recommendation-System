@@ -4,7 +4,6 @@ CREATE TABLE core.paper (
     title TEXT,
     abstract TEXT,
     abstract_link TEXT,
-    execution_datetime TIMESTAMP,
     open_access BOOLEAN,
     publication_day INT,
     publication_month INT,
@@ -65,7 +64,7 @@ CREATE INDEX idx_paper_author_author_id ON core.paper_author(author_id);
 -- Bảng keyword
 CREATE TABLE core.keyword (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE,
+    name TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP
 );
 
