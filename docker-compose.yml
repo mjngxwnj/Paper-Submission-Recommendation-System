@@ -63,13 +63,23 @@ services:
       - "minio"
 
   # Airflow
+  airflow-db:
+    image: postgres:15
+    expose:
+      - "5432"
+    volumes:
+      - airflow_data:/var/lib/postgresql/data
+
   airflow:
     build: ./pipelines
     expose:
       - "8080"
+    depends_on:
+      - airflow-db
 
 volumes:
   mongo_data:
   postgres_data:
   etcd:
   minio_data:
+  airflow_data:

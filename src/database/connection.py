@@ -4,9 +4,11 @@ import logging
 import time
 
 class MongoDBConnector:
-    def __init__(self, host: str = 'localhost', port: int = 27017,
-                       db_name: str = 'default', username: str = None,
-                       password: str = None):
+    def __init__(self, host: str = 'localhost',
+                       port: int = 27017,
+                       db_name: str = 'default',
+                       username: str | None = None,
+                       password: str | None = None):
         """
         Initialize class to manage connections.
 
@@ -59,8 +61,10 @@ class MongoDBConnector:
             self._db = self._client[self._db_name]
             end_time = time.time()
 
-            logging.info(f"Connected to MongoDB {self._host}:{self._port}, "
-                        f"database: {self._db_name} (connect took {end_time - start_time:.4f}s)")
+            logging.info(
+                f"Connected to MongoDB {self._host}:{self._port}, "
+                f"database: {self._db_name} (connect took {end_time - start_time:.4f}s)"
+            )
 
             return self._db
 
