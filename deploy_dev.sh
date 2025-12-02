@@ -18,6 +18,13 @@ success() { echo -e "${GREEN}✅ $1${NC}"; }
 warn() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 error() { echo -e "${RED}❌ $1${NC}"; }
 
+POSTGRES_HOST=postgres
+POSTGRES_CONTAINER=postgres
+DB_NAME=rcm_papers
+DB_USER=admin
+DB_PASSWORD=admin
+SQL_DIR=./src/warehouse/sql
+
 info "Starting deployment of services..."
 
 info "Step 1: Starting Docker containers..."
@@ -65,10 +72,71 @@ info "  4.2: Configuring PostgreSQL connection..."
   --conn-type postgres \
   --conn-host postgres \
   --conn-port 5432 \
-  --conn-login admin@admin.com \
+  --conn-login admin \
   --conn-password admin \
-  --conn-schema test) >/dev/null 2>&1
+  --conn-schema rcm_papers) >/dev/null 2>&1
 success "PostgreSQL connection configured."
+
+info "  4.3: Configuring Springer API connection..."
+(docker exec airflow airflow connections delete springer_api || true) >/dev/null 2>&1
+(docker exec airflow airflow connections add springer_api \
+  --conn-type http \
+  --conn-password 8bdf5b797a7156c9db9224eb4ea3e623) >/dev/null 2>&1
+
+info "  4.3: Configuring Scopus API connection..."
+(docker exec airflow airflow connections delete scopus_api || true) >/dev/null 2>&1
+(docker exec airflow airflow connections add scopus_api \
+  --conn-type http \
+  --conn-password 58f0c056352500c8175e0418b08a4c4e) >/dev/null 2>&1
+
+success "API connection configured."
+
+info "Step 5: Waiting for PostgreSQL to be healthy..."
+
+MAX_WAIT=180
+INTERVAL=5
+ELAPSED=0
+
+while ! docker exec $POSTGRES_CONTAINER pg_isready -U $DB_USER >/dev/null 2>&1; do
+  if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+    error "Timeout waiting for PostgreSQL. Exiting."
+    exit 1
+  fi
+  warn "PostgreSQL not ready yet, waiting ${INTERVAL}s..."
+  sleep $INTERVAL
+  ELAPSED=$((ELAPSED + INTERVAL))
+done
+
+success "PostgreSQL is ready!"
+
+info "Step 6: Setting up PostgreSQL database, schema and table for dev..."
+
+EXISTS=$(docker exec -i $POSTGRES_CONTAINER \
+  psql "postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/postgres" \
+  -tA -c "SELECT 1 FROM pg_database WHERE datname='$DB_NAME';")
+
+if [ "$EXISTS" != "1" ]; then
+  docker exec -i $POSTGRES_CONTAINER \
+    psql "postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/postgres" \
+    -c "CREATE DATABASE $DB_NAME;"
+  success "Database $DB_NAME created."
+else
+  info "Database $DB_NAME already exists."
+fi
+
+for file in $(ls $SQL_DIR/00_init/*.sql | sort); do
+  info "Applying $file..."
+  docker exec -i $POSTGRES_CONTAINER \
+    psql "postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME" <"$file"
+done
+
+for file in "$SQL_DIR"/core/*.sql; do
+  info "Applying $file..."
+  docker exec -i $POSTGRES_CONTAINER psql \
+    "postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME" <"$file"
+done
+
+success "Database, schema, and tables are ready for dev."
 
 echo ""
 success "All services are up and running!"

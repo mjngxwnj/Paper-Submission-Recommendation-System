@@ -26,3 +26,46 @@ def get_mongo_conn(conn_id: str = "mongo_default") -> dict:
     }
 
     return mongo_config
+
+
+def get_postgres_conn(conn_id: str = "postgres_default") -> dict:
+    """
+    Retrieve PostgreSQL connection configuration from Airflow connection.
+
+    Args:
+        conn_id (str): Airflow connection ID (default: "postgres_default").
+
+    Returns:
+        dict: PostgreSQL connection params:
+              host, port, user, password, database/schema
+    """
+
+    conn = BaseHook.get_connection(conn_id)
+
+    postgres_config = {
+        "host": conn.host,
+        "port": conn.port,
+        "username": conn.login,
+        "password": conn.password,
+        "db_name": conn.schema,
+    }
+
+    return postgres_config
+
+
+def get_springer_api_key() -> str:
+    """
+    Retrieve Springer API key from Airflow connection.
+    """
+    conn = BaseHook.get_connection("springer_api")
+    return conn.password
+
+
+def get_scopus_api_key() -> str:
+    """
+    Retrieve Scopus API key from Airflow connection.
+    """
+    conn = BaseHook.get_connection("scopus_api")
+    return conn.password
+
+
