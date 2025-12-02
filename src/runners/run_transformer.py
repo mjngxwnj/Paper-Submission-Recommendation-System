@@ -96,13 +96,13 @@ def run_transformer(transformer_default: type[BaseTransformer], src: str) -> Non
 
             logging.info(f"Normalization for {src} completed.")
 
-#            checkpoint_info = {
-#                "last_sync_date": today()
-#            }
-#
-#            checkpoint.save_checkpoint(checkpoint_info)
-#
-#            logging.info(f"Checkpoint saved: {checkpoint_info}")
+            checkpoint_info = {
+                "last_sync_date": today()
+            }
+
+            checkpoint.save_checkpoint(checkpoint_info)
+
+            logging.info(f"Checkpoint saved: {checkpoint_info}")
 
         except Exception as e:
             logging.error(f"Normalization for {src} failed: {e}")
