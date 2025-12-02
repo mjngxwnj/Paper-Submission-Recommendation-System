@@ -24,22 +24,19 @@ CREATE INDEX idx_paper_ingestion_source_id ON core.paper(ingestion_source_id);
 -- Bảng venue
 CREATE TABLE core.venue (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(512) NOT NULL UNIQUE,
-    created_at TIMESTAMP
+    name VARCHAR(512) NOT NULL UNIQUE
 );
 
 -- Bảng ingestion_source
 CREATE TABLE core.ingestion_source (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE,
-    created_at TIMESTAMP
+    name VARCHAR(255) NOT NULL UNIQUE
 );
 
 -- Bảng author
 CREATE TABLE core.author (
     orcid VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP
+    name VARCHAR(255) NOT NULL
 );
 
 --INDEX TABLE author
@@ -65,7 +62,6 @@ CREATE INDEX idx_paper_author_author_id ON core.paper_author(author_id);
 CREATE TABLE core.keyword (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
-    created_at TIMESTAMP
 );
 
 --INDEX TABLE keyword

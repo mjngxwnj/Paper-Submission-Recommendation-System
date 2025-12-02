@@ -13,21 +13,39 @@ class UnifiedTransformer(BaseTransformer):
         """
 
     def _transform_venue(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Extract unique venues and their corresponding execution datetime"""
-        venue_df = df[['target_venue', 'execution_datetime']].dropna(subset=['target_venue'])
+        """
+        Extract unique venues and their corresponding execution datetime.
+
+        Args:
+            df (pd.DataFrame): Raw DataFrame containing the target_venue.
+
+        Returns:
+            pd.DataFrame: A DataFrame with unique venues standardized into:
+                - name: Venue name
+        """
+
+        venue_df = df[['target_venue']].dropna(subset=['target_venue'])
 
         venue_df = venue_df.drop_duplicates(subset=['target_venue'], keep='first')
 
         venue_df = venue_df.rename(columns={
-            'target_venue': 'name',
-            'execution_datetime': 'created_at'
+            'target_venue': 'name'
         })
 
         return venue_df.where(pd.notna(venue_df), None)
 
 
     def _transform_ingestion_source(self) -> pd.DataFrame:
-        """Return a fixed DataFrame for ingestion sources with specified IDs"""
+        """
+        Produce a static table of ingestion sources with fixed IDs.
+
+        Returns:
+            pd.DataFrame: A DataFrame with columns:
+                - id (int): Unique ID for the ingestion source
+                - name (str): Name of the ingestion source
+              (springer=1, openalex=2, scopus=3)
+        """
+
         ingestion_source_df = pd.DataFrame({
             'id': [1, 2, 3],
             'name': ['springer', 'openalex', 'scopus']
@@ -37,7 +55,21 @@ class UnifiedTransformer(BaseTransformer):
 
 
     def _explode_keyword(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Extract unique keywords and their corresponding execution datetime"""
+        """
+        Normalize, clean, split, and flatten keyword data from the raw dataset.
+
+        Args:
+            df (pd.DataFrame): Raw DataFrame containing keyword, doi.
+
+        Returns:
+            tuple(pd.DataFrame, pd.DataFrame):
+                1. bridge_paper_keyword_df:
+                    - paper_doi
+                    - name (keyword)
+                2. keyword_only:
+                    - name (unique keyword list)
+        """
+
         bridge_paper_keyword_df = df[['doi', 'keyword', 'execution_datetime']].dropna(subset=['keyword'])
 
         def normalize_keywords(x):
@@ -75,8 +107,7 @@ class UnifiedTransformer(BaseTransformer):
 
         bridge_paper_keyword_df = bridge_paper_keyword_df.rename(columns={
             'doi': 'paper_doi',
-            'keyword': 'name',
-            'execution_datetime': 'created_at'
+            'keyword': 'name'
         })
 
         keyword_only = bridge_paper_keyword_df[['name']].drop_duplicates(subset=['name'])
@@ -84,7 +115,23 @@ class UnifiedTransformer(BaseTransformer):
         return bridge_paper_keyword_df, keyword_only
 
 
-    def _transform_author(self, df: pd.DataFrame):
+    def _transform_author(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Normalize and explode nested author–ORCID structures into two tables:
+
+        Args:
+            df (pd.DataFrame): Raw DataFrame containing `doi`, `author`,
+                and `orcid`.
+
+        Returns:
+            tuple(pd.DataFrame, pd.DataFrame):
+                1. bridge_paper_author_df:
+                    - paper_doi
+                    - author_id (ORCID)
+                2. author_df:
+                    - orcid
+                    - name (author's name)
+        """
 
         tmp_df = df[['doi', 'author', 'orcid']]
 
@@ -112,14 +159,26 @@ class UnifiedTransformer(BaseTransformer):
 
         author_df = tmp_df[['orcid', 'author']].rename(columns={
             'author': 'name'
-        }).drop_duplicates(subset=['name', 'orcid'])
+        }).drop_duplicates(subset=['orcid'])
 
         return bridge_paper_author_df, author_df
 
 
-    def _transform_paper_keyword(self, paper_keyword_df: pd.DataFrame, keyword_df: pd.DataFrame):
+    def _transform_paper_keyword(self, paper_keyword_df: pd.DataFrame, keyword_df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Map exploded paper–keyword data to keyword IDs.
+
+        Args:
+            paper_keyword_df (pd.DataFrame): Bridge table from `_explode_keyword`.
+            keyword_df (pd.DataFrame): Keyword dimension table containing IDs.
+
+        Returns:
+            pd.DataFrame: A standardized bridge table:
+                - paper_doi
+                - keyword_id
+        """
         if paper_keyword_df.empty or keyword_df.empty:
-            return pd.DataFrame(columns=['paper_doi', 'keyword_id', 'created_at'])
+            return pd.DataFrame(columns=['paper_doi', 'keyword_id'])
         # Merge to get keyword_id based on keyword name
 
         paper_keyword_df = paper_keyword_df.merge(
@@ -222,6 +281,17 @@ class UnifiedTransformer(BaseTransformer):
     def transform_bridges(self,
                           paper_keyword_df: pd.DataFrame,
                           keyword_df: pd.DataFrame) -> dict[str, pd.DataFrame]:
+        """
+        Transform and assemble bridge tables using dimension-resolved keyword IDs.
+
+        Args:
+            paper_keyword_df (pd.DataFrame): Bridge table linking papers and keywords.
+            keyword_df (pd.DataFrame): Dimension table with keyword IDs.
+
+        Returns:
+            dict[str, pd.DataFrame]:
+                - paper_keyword: Final bridge table with foreign keys applied.
+        """
 
         if paper_keyword_df is None or paper_keyword_df.empty:
             return {
@@ -236,6 +306,16 @@ class UnifiedTransformer(BaseTransformer):
 
 
     def transform_dimensions(self, df: pd.DataFrame) -> dict[str, pd.DataFrame]:
+        """
+        Generate all dimension and intermediate bridge tables from raw input.
+
+        Args:
+            df (pd.DataFrame): Raw ingestion dataset.
+
+        Returns:
+            dict[str, pd.DataFrame]: Dictionary of dimension and bridge tables.
+        """
+
         if df is None or df.empty:
             return {
                 'venue': pd.DataFrame(),
@@ -262,7 +342,18 @@ class UnifiedTransformer(BaseTransformer):
     def transform_facts(self,
                         paper_df: pd.DataFrame,
                         venue_df: pd.DataFrame) -> dict[str, pd.DataFrame]:
-        """Phase 2: Transform fact and relationship tables with resolved IDs"""
+        """
+        Produce fact tables using resolved dimension IDs.
+
+        Args:
+            paper_df (pd.DataFrame): Raw paper data.
+            venue_df (pd.DataFrame): Dimension table with venue IDs.
+
+        Returns:
+            dict[str, pd.DataFrame]:
+                - paper: The fully normalized paper fact table.
+        """
+
         return {
             'paper': self._transform_paper(paper_df, venue_df)
         }
