@@ -4,7 +4,6 @@
 # Trigger: Runs on pull requests targetting 'dev' branch.
 #
 # Purpose: Ensure code quality and functionality before merging. It includes:
-# - Linting for code (Flake8): code quality, unuse function or variable, too long code line,...
 # - Feature-specific tests for branches:
 #   + 'feature/architecture-data': Tests docker build, container, configurations, infrastrucutre,...
 #   + 'feature/data-preprocessing': To be continued ..
