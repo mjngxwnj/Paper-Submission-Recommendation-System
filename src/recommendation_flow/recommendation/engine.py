@@ -1,4 +1,5 @@
 from typing import List, Dict, Any
+from integration.secrets import get_api_key
 from src.warehouse.core.session import postgres_session
 from recommendation_flow.preprocessing.data_combiner import DocumentCombiner
 from recommendation_flow.embedding.embedding_service import EmbeddingService
@@ -29,7 +30,7 @@ class RecommendationEngine:
     self.rrf_k = rrf_k
     self.final_top_k = final_top_k
     self.combiner = DocumentCombiner()
-    self.embedding = EmbeddingService()
+    self.embedding = EmbeddingService(api_key=get_api_key())
     
   def search(self, user_query: str) -> List[Dict[str, Any]]:
     combined_query = self.combiner.combine_user_query(user_query)
