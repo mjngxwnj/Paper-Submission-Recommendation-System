@@ -6,3 +6,6 @@ venv/
 
 # ignore volumes
 volumes/
+
+#ignore .env
+.env

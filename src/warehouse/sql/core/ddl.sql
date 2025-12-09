@@ -10,7 +10,6 @@ CREATE TABLE core.paper (
     publication_year INT,
     venue_id INT,
     ingestion_source_id INT,
-    created_at TIMESTAMP
 );
 
 --INDEX TABLE paper
@@ -61,7 +60,7 @@ CREATE INDEX idx_paper_author_author_id ON core.paper_author(author_id);
 -- Bảng keyword
 CREATE TABLE core.keyword (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL UNIQUE
 );
 
 --INDEX TABLE keyword

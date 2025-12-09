@@ -14,7 +14,7 @@ class UnifiedTransformer(BaseTransformer):
 
     def _transform_venue(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Extract unique venues and their corresponding execution datetime.
+        Extract unique venues.
 
         Args:
             df (pd.DataFrame): Raw DataFrame containing the target_venue.
@@ -70,7 +70,7 @@ class UnifiedTransformer(BaseTransformer):
                     - name (unique keyword list)
         """
 
-        bridge_paper_keyword_df = df[['doi', 'keyword', 'execution_datetime']].dropna(subset=['keyword'])
+        bridge_paper_keyword_df = df[['doi', 'keyword']].dropna(subset=['keyword'])
 
         def normalize_keywords(x):
             if x is None:
@@ -214,22 +214,21 @@ class UnifiedTransformer(BaseTransformer):
         if df is None or df.empty:
             return pd.DataFrame(columns=[
                 'doi', 'title', 'abstract', 'abstract_link',
-                'open_access', 'publication_day', 'publication_month', 'publication_year',
-                'venue_id', 'ingestion_source_id', 'created_at'
+                'open_access', 'publication_day', 'publication_month',
+                'publication_year', 'venue_id', 'ingestion_source_id'
             ])
 
         # Start with base columns
         paper_df = df[[
             'doi', 'title', 'abstract', 'abstractlink',
-            'openaccess', 'publication_day', 'publication_month', 'publication_year',
-            'target_venue', 'ingestion_source', 'execution_datetime'
+            'openaccess', 'publication_day', 'publication_month',
+            'publication_year', 'target_venue', 'ingestion_source'
         ]].copy()
 
         # Rename columns to match schema
         paper_df = paper_df.rename(columns={
             'abstractlink': 'abstract_link',
-            'openaccess': 'open_access',
-            'execution_datetime': 'created_at'
+            'openaccess': 'open_access'
         })
 
         # Map ingestion_source to ingestion_source_id
@@ -257,7 +256,7 @@ class UnifiedTransformer(BaseTransformer):
         final_columns = [
             'doi', 'title', 'abstract', 'abstract_link',
             'open_access', 'publication_day', 'publication_month', 'publication_year',
-            'venue_id', 'ingestion_source_id', 'created_at'
+            'venue_id', 'ingestion_source_id'
         ]
 
         paper_df = paper_df[final_columns]

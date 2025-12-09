@@ -23,33 +23,6 @@ class WarehouseDataAccess:
         return f"{self._schema}.{table}"
 
 
-    def _get_last_sync_date(self,
-                            table: str = 'papers',
-                            column: str = 'created_at') -> None | str:
-        """
-        Get the last synced value (used for incremental read & load).
-        Cached after first call to avoid repeated DB queries.
-
-        Args:
-            table (str): Table name without schema.
-            column (str): Column to get max value.
-
-        Returns:
-            Any | None: Last synced value or None if table is empty.
-        """
-
-        if self._last_sync_date is not None:
-            return self._last_sync_date
-
-        sql = f"SELECT MAX({column}) FROM {table}"
-
-        self._cursor.execute(sql)
-        result = self._cursor.fetchone()
-        self._last_sync_date = result[0] if result else None
-
-        return self._last_sync_date
-
-
     def set_schema(self, schema: str) -> None:
         """
         Set or change the default schema for subsequent operations.
@@ -61,36 +34,34 @@ class WarehouseDataAccess:
         self._schema = schema
 
 
-    def read(self, table: str, only_new: bool = False) -> pd.DataFrame:
+    def read(self, table: str, conditions: str | None = None) -> pd.DataFrame:
         """
-        Read data from a table.
+        Read data from a table with optional filter conditions.
 
         Args:
             table (str): Table name in a schema.
-            only_new (bool):
-                True  -> fetch only rows not yet present in feature schema.
-                False -> fetch full table.
+            conditions (str | None):
+                SQL WHERE clause (without 'WHERE'), e.g., "vector IS NULL"
 
         Returns:
             pd.DataFrame: Fetched data
         """
-
         table = self._get_table(table)
-        last_sync = self._get_last_sync_date() if only_new else None
 
-        sql = f"SELECT * FROM {table}" + (f" WHERE created_at > %s" if last_sync else "")
-        params = (last_sync,) if last_sync else None
+        sql = f"SELECT * FROM {table}"
+        if conditions:
+            sql += f" WHERE {conditions}"
 
-        self._cursor.execute(sql, params)
+        self._cursor.execute(sql)
         rows = self._cursor.fetchall()
 
         if rows:
             columns = [desc[0] for desc in self._cursor.description]
             df = pd.DataFrame(rows, columns=columns)
-            logging.info(f"Read data sucessfully from {table}")
+            logging.info(f"Read data successfully from {table} (condition: {conditions})")
         else:
             df = pd.DataFrame()
-            logging.info(f"No data found in {table}")
+            logging.info(f"No data found in {table} (condition: {conditions})")
 
         return df
 
@@ -152,5 +123,49 @@ class WarehouseDataAccess:
         logging.info(f"Upserted {total} rows into {table}")
         return
 
+
+    def update(self,
+               table: str,
+               data: pd.DataFrame,
+               key: str,
+               update_cols: list[str],
+               batch_size: int = 100000) -> pd.DataFrame:
+        """
+        Batch update multiple rows in a table from pandas DataFrame.
+
+        Args:
+            table (str): Target table name
+            data (pd.DataFrame): DataFrame containing columns [key] + update_cols
+            key (str): Column to match (e.g., doi)
+            update_cols (list[str]): Columns to update
+            batch_size (int): Number of rows per batch
+        """
+
+        if data.empty:
+            logging.info(f"No data to update in {table}")
+            return
+
+        table = self._get_table(table)
+
+        # Build SQL template
+        cols_sql = ', '.join([f"{col} = v.{col}" for col in update_cols])
+        value_cols = ', '.join([key] + update_cols)
+
+        sql = f"""
+        UPDATE {table} AS p
+        SET {cols_sql}
+        FROM (VALUES %s) AS v({value_cols})
+        WHERE p.{key} = v.{key};
+        """
+
+        records = [tuple(row) for row in data[[key] + update_cols].itertuples(index=False)]
+
+        total = 0
+        for i in range(0, len(records), batch_size):
+            batch = records[i:i + batch_size]
+            execute_values(self._cursor, sql, batch)
+            total += len(batch)
+
+        logging.info(f"Updated {total} rows in {table}")
 
 
