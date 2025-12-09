@@ -6,6 +6,7 @@ from typing import List
 
 from google import genai
 from google.genai import types
+from recommendation_flow.utils.helpers import parse_api_keys
 
 class EmbeddingService:
   def __init__(
@@ -24,12 +25,34 @@ class EmbeddingService:
       model_name (str, optional): Embedding model name. Defaults to "gemini-embedding-001".
       batch_size (int, optional): Number of documents per batch. Defaults to 200.
     """
-    self.api_key = api_key
+    self.api_keys = parse_api_keys(api_key)
+    if not self.api_keys:
+      raise ValueError("No valid API keys provided.")
+    
+    self.current_key_idx = 0
     self.model_name = model_name
     self.batch_size = batch_size
-    self.client = genai.Client(api_key=api_key)
     self.rpm_limit = request_per_minute_limit
     self.rpd_limit = request_per_day_limit
+    self._initialize_client()
+    
+  def _initialize_client(self):
+    current_key = self.api_keys[self.current_key_idx]
+    masked_key = f"...{current_key[-4:]}" if len(current_key) > 4 else "INVALID"
+    print(f"Initializing GenAI Client with key index {self.current_key_idx} ({masked_key})")
+    
+    self.client = genai.Client(api_key=current_key)
+    
+  def _rotate_key(self) -> bool:
+    next_idx = self.current_key_idx + 1
+    if next_idx < len(self.api_keys):
+      print(f"Switching API Key from index {self.current_key_idx} to {next_idx} due to error.")
+      self.current_key_idx = next_idx
+      self._initialize_client()
+      return True
+    else:
+      print("All API keys have been exhausted!")
+      return False
 
   def embed_documents(self, texts: List[str]) -> List[List[float]]:
     """
@@ -43,23 +66,33 @@ class EmbeddingService:
       np.ndarray: 2D array (num_docs, embedding_dim).
     """
     if not texts: return []
-
     contents = [{"parts": [{"text": t}]} for t in texts]
-    try:
-      res = self.client.models.embed_content(
-        model=self.model_name,
-        contents=contents,
-        config=types.EmbedContentConfig(
-          task_type="RETRIEVAL_DOCUMENT",
-          output_dimensionality=768
+    max_attempts = len(self.api_keys)
+    
+    for attempt in range(max_attempts):
+      try:
+        res = self.client.models.embed_content(
+          model=self.model_name,
+          contents=contents,
+          config=types.EmbedContentConfig(
+            task_type="RETRIEVAL_DOCUMENT",
+            output_dimensionality=768
+          )
         )
-      )
 
-      vectors = [emb.values for emb in res.embeddings]
-      return vectors
-    except Exception as e:
-      logging.error(f"Error generate embedding, reason {e}")
-      return []
+        vectors = [emb.values for emb in res.embeddings]
+        return vectors
+      except Exception as e:
+        print(f"Error with key index {self.current_key_idx}: {e}")
+        
+        if self._rotate_key():
+          time.sleep(1)
+          continue
+        else:
+          print("Fatal Error: Embedding failed with all available keys.")
+          return []
+        
+    return []
 
   def generate_in_batches(self, df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -138,14 +171,23 @@ class EmbeddingService:
       np.ndarray: 1D vector (embedding_dim,).
     """
     contents = [{"parts": [{"text": text}]}]
-
-    res = self.client.models.embed_content(
-      model=self.model_name,
-      contents=contents,
-      config=types.EmbedContentConfig(
-        task_type="RETRIEVAL_QUERY",
-        output_dimensionality=768
-      )
-    )
-
-    return np.array(res.embeddings[0].values)
+    max_attempts = len(self.api_keys)
+    
+    for attempt in range(max_attempts):
+      try:
+        res = self.client.models.embed_content(
+          model=self.model_name,
+          contents=contents,
+          config=types.EmbedContentConfig(
+            task_type="RETRIEVAL_QUERY",
+            output_dimensionality=768
+          )
+        )
+        return np.array(res.embeddings[0].values)
+      except Exception as e:
+        print(f"Query embedding error with key {self.current_key_idx}: {e}")
+        if self._rotate_key():
+          continue
+        else:
+          raise e
+    return np.array([])

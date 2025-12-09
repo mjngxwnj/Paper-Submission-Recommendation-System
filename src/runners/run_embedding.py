@@ -24,7 +24,7 @@ def run_embedding() -> None:
     logging.info("Step 1: Reading data from warehouse...")
     data = warehouse_access.read(
       table='paper_rcm_feature',
-      conditions='vector IS NULL'
+      conditions='embedding IS NULL'
     )
 
     # 2. Preprocessing and Combining text
@@ -36,7 +36,7 @@ def run_embedding() -> None:
     logging.info("Step 3: Embedding in batches and Updating...")
     data_to_update = embedding_service.generate_in_batches(processed_df)
     warehouse_access.update(
-      table='paper',
+      table='core.paper',
       data=data_to_update,
       key='doi',
       update_cols=['vector', 'combined_text']
