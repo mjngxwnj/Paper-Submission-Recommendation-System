@@ -77,20 +77,6 @@ info "  4.2: Configuring PostgreSQL connection..."
   --conn-schema rcm_papers) >/dev/null 2>&1
 success "PostgreSQL connection configured."
 
-info "  4.3: Configuring Springer API connection..."
-(docker exec airflow airflow connections delete springer_api || true) >/dev/null 2>&1
-(docker exec airflow airflow connections add springer_api \
-  --conn-type http \
-  --conn-password 8bdf5b797a7156c9db9224eb4ea3e623) >/dev/null 2>&1
-
-info "  4.3: Configuring Scopus API connection..."
-(docker exec airflow airflow connections delete scopus_api || true) >/dev/null 2>&1
-(docker exec airflow airflow connections add scopus_api \
-  --conn-type http \
-  --conn-password 58f0c056352500c8175e0418b08a4c4e) >/dev/null 2>&1
-
-success "API connection configured."
-
 info "Step 5: Waiting for PostgreSQL to be healthy..."
 
 MAX_WAIT=180

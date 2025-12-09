@@ -6,7 +6,7 @@ from data_ingestion.scrapers import openAlexScraper, SpringerScraper, ScopusScra
 from data_ingestion.normalizers import OpenalexNormalizer, SpringerNormalizer, ScopusNormalizer
 from data_ingestion.transformers import UnifiedTransformer
 
-from integration.airflow.conn_config import get_springer_api_key, get_scopus_api_key
+from integration.secrets import get_api_key
 from runners import run_scraper, run_normalizer, run_transformer
 
 from datetime import datetime
@@ -30,7 +30,7 @@ with DAG(
         op_kwargs = {
             'scraper_default': SpringerScraper,
             'batch_num': 25,
-            'api_key': get_springer_api_key(),
+            'api_key': get_api_key("SPRINGER_API_KEY"),
             'src': 'springer'
         }
     )
@@ -52,7 +52,7 @@ with DAG(
         op_kwargs = {
             'scraper_default': ScopusScraper,
             'batch_num': 100,
-            'api_key': get_scopus_api_key(),
+            'api_key': get_api_key("SCOPUS_API_KEY"),
             'src': 'scopus'
         }
     )

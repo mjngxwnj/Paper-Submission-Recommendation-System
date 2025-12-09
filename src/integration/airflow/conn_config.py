@@ -51,21 +51,3 @@ def get_postgres_conn(conn_id: str = "postgres_default") -> dict:
     }
 
     return postgres_config
-
-
-def get_springer_api_key() -> str:
-    """
-    Retrieve Springer API key from Airflow connection.
-    """
-    conn = BaseHook.get_connection("springer_api")
-    return conn.password
-
-
-def get_scopus_api_key() -> str:
-    """
-    Retrieve Scopus API key from Airflow connection.
-    """
-    conn = BaseHook.get_connection("scopus_api")
-    return conn.password
-
-
