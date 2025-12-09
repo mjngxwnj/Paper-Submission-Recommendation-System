@@ -13,7 +13,7 @@ def run_embedding() -> None:
   preprocessor = DataPreprocessor()
   combiner = DocumentCombiner()
   embedding_service = EmbeddingService(
-    api_key=get_api_key(),
+    api_key=get_api_key("GOOGLE_API_KEY"),
     batch_size=100
   )
 
