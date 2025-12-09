@@ -30,7 +30,7 @@ class RecommendationEngine:
     self.rrf_k = rrf_k
     self.final_top_k = final_top_k
     self.combiner = DocumentCombiner()
-    self.embedding = EmbeddingService(api_key=get_api_key())
+    self.embedding = EmbeddingService(api_key=get_api_key("GOOGLE_API_KEY"))
     
   def search(self, user_query: str) -> List[Dict[str, Any]]:
     combined_query = self.combiner.combine_user_query(user_query)
