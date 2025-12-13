@@ -8,6 +8,7 @@ from google import genai
 from google.genai import types
 from recommendation_flow.utils.helpers import parse_api_keys
 from recommendation_flow.utils.status_code import GoogleAPIChecker
+
 class EmbeddingService:
   def __init__(
     self,
@@ -85,7 +86,8 @@ class EmbeddingService:
             task_type = task_type,
             output_dimensionality=768
           )
-        )
+        )  
+        return res
       
       except Exception as e:
         status = GoogleAPIChecker.extract_staus_code(e)
@@ -108,8 +110,10 @@ class EmbeddingService:
             continue
           else:
             raise RuntimeError(f"All API keys exhausted (status {status}).")
-          
-      raise RuntimeError(f"Client error {status}: {e}")
+        
+        raise RuntimeError(f"Client error {status}: {e}")
+      
+    raise RuntimeError("Max retry limit exceeded.")
 
   # -----------------------------------------------------------------------------------
   def embed_documents(self, texts: List[str]) -> List[List[float]]:
@@ -202,12 +206,12 @@ class EmbeddingService:
         logging.error(f"Vector length mismatch at batch {start_idx}. Skipping update.")
         continue
 
-      batch_df.loc[:, 'vector'] = vectors
-      results.append(batch_df[['doi', 'combined_text', 'vector']])
+      batch_df.loc[:, 'embedding'] = vectors
+      results.append(batch_df[['doi', 'combined_text', 'embedding']])
       
       time.sleep(0.1)
 
     if not results:
-      return pd.DataFrame(columns=["doi", "combined_text", "vector"])
+      return pd.DataFrame(columns=["doi", "combined_text", "embedding"])
 
     return pd.concat(results, ignore_index=True)
