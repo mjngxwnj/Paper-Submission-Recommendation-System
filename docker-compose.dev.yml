@@ -1,13 +1,4 @@
 services:
-  # Jupyter Notebook
-  notebook:
-    container_name: notebook
-    build: ./notebooks
-    ports:
-      - "8888:8888"
-    volumes:
-      - .:/workspace
-
   # Postgres
   postgres:
     container_name: postgres
