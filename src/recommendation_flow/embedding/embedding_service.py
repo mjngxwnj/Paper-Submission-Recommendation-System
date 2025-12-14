@@ -8,6 +8,7 @@ from google import genai
 from google.genai import types
 from recommendation_flow.utils.helpers import parse_api_keys
 from recommendation_flow.utils.status_code import GoogleAPIChecker
+
 class EmbeddingService:
   def __init__(
     self,
@@ -85,7 +86,7 @@ class EmbeddingService:
             task_type = task_type,
             output_dimensionality=768
           )
-        )
+        )  
         return res
       
       except Exception as e:
@@ -109,8 +110,10 @@ class EmbeddingService:
             continue
           else:
             raise RuntimeError(f"All API keys exhausted (status {status}).")
-          
+        
         raise RuntimeError(f"Client error {status}: {e}")
+      
+    raise RuntimeError("Max retry limit exceeded.")
 
   # -----------------------------------------------------------------------------------
   def embed_documents(self, texts: List[str]) -> List[List[float]]:
