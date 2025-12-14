@@ -1,13 +1,7 @@
 services:
-  # Jupyter Notebook
-  notebook:
-    build: ./notebooks
-    expose:
-      - "8888"
-
   # Postgres
   postgres:
-    image: postgres:15
+    image: pgvector/pgvector:pg15
     expose:
       - "5432"
     volumes:
@@ -61,6 +55,4 @@ services:
 volumes:
   mongo_data:
   postgres_data:
-  etcd:
-  minio_data:
   airflow_data:

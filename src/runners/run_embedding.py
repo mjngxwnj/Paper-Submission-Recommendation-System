@@ -23,7 +23,7 @@ def run_embedding() -> None:
     # 1. Reading data from warehouse
     logging.info("Step 1: Reading data from warehouse...")
     data = warehouse_access.read(
-      table='paper_rcm_feature',
+      table='paper_sample',
       conditions='embedding IS NULL'
     )
 
@@ -35,11 +35,12 @@ def run_embedding() -> None:
     # 3. Embedding in batches and Updating to database
     logging.info("Step 3: Embedding in batches and Updating...")
     data_to_update = embedding_service.generate_in_batches(processed_df)
+    data_to_update.head(5)
     warehouse_access.update(
-      table='core.paper',
+      table='paper',
       data=data_to_update,
       key='doi',
-      update_cols=['vector', 'combined_text']
+      update_cols=['embedding', 'combined_text']
     )
 
   logging.info("Embedding pipeline completed successfully.")

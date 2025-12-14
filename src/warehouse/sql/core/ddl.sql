@@ -10,6 +10,15 @@ CREATE TABLE core.paper (
     publication_year INT,
     venue_id INT,
     ingestion_source_id INT,
+
+    -- For embedding
+    combined_text TEXT,
+    embedding vector(768),
+
+    -- Full Text Search (automatically create from combined_text)
+    tsv TSVECTOR GENERATED ALWAYS AS (
+      to_tsvector('english', coalesce(combined_text, ''))
+    ) STORED 
 );
 
 --INDEX TABLE paper
