@@ -9,7 +9,7 @@ from recommendation_flow.preprocessing.data_processor import DataPreprocessor
 from recommendation_flow.preprocessing.data_combiner import DocumentCombiner
 from recommendation_flow.preprocessing.document_deduplicator import DocumentDeduplicator
 
-def run_embedding() -> None:
+def run_embedding_in_batches() -> bool:
   # Configuration
   preprocessor = DataPreprocessor()
   combiner = DocumentCombiner()
@@ -23,11 +23,15 @@ def run_embedding() -> None:
     warehouse_access = WarehouseDataAccess(pg_session)
 
     # 1. Reading data from warehouse
-    logging.info("Step 1: Reading data from warehouse...")
+    logging.info("Step 1: Reading data from warehouse in batches of 100,000 records...")
     data = warehouse_access.read(
-      table='paper_sample',
-      conditions='embedding IS NULL'
+    table='paper_rcm_features',
+    conditions='embedding IS NULL LIMIT 100000'
     )
+
+    # Break if data is empty
+    if data.empty:
+        return False
 
     # 2. Preprocessing and Combining text
     logging.info("Step 2: Preprocessing and Combining text...")
@@ -41,12 +45,30 @@ def run_embedding() -> None:
     # 3. Embedding in batches and Updating to database
     logging.info("Step 3: Embedding in batches and Updating...")
     data_to_update = embedding_service.generate_in_batches(processed_df)
-    data_to_update.head(5)
     warehouse_access.update(
-      table='paper',
-      data=data_to_update,
-      key='doi',
-      update_cols=['embedding', 'combined_text']
+    table='paper',
+    data=data_to_update,
+    key='doi',
+    update_cols=['embedding', 'combined_text']
     )
 
-  logging.info("Embedding pipeline completed successfully.")
+    logging.info("Embedding pipeline completed successfully.")
+
+    return True
+
+
+def run_embedding() -> None:
+    """
+    Run embedding process in batches continuously until no more data to process.
+    """
+    logging.info("Starting embedding pipeline...")
+
+    while True:
+        success = run_embedding_in_batches()
+        if not success:
+            logging.info("No more records to process. Embedding pipeline finished.")
+            break
+        else:
+            logging.info("Batch processed successfully. Continuing to next batch...")
+
+
