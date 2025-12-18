@@ -12,8 +12,6 @@ from recommendation_flow.preprocessing.document_deduplicator import DocumentDedu
 def run_embedding_in_batches() -> bool:
   # Configuration
   preprocessor = DataPreprocessor()
-  combiner = DocumentCombiner()
-  deduplicator = DocumentDeduplicator()
   embedding_service = EmbeddingService(
     api_key=get_api_key("GOOGLE_API_KEY"),
     batch_size=100
@@ -36,9 +34,9 @@ def run_embedding_in_batches() -> bool:
     # 2. Preprocessing and Combining text
     logging.info("Step 2: Preprocessing and Combining text...")
     processed_df = preprocessor.transform(data)
-    processed_df['combined_text'] = processed_df.apply(combiner.combine_documents, axis=1)
+    processed_df['combined_text'] = processed_df.apply(DocumentCombiner.combine_documents, axis=1)
     processed_df.drop(columns=["keyword"], inplace=True)
-    processed_df = deduplicator.deduplicator_by_doi(processed_df)
+    processed_df = DocumentDeduplicator.deduplicator_by_doi(processed_df)
     
     logging.info(f"Unique documents for embedding: {len(processed_df)}")
 
