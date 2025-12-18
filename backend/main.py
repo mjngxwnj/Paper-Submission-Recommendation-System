@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from api.v1.routers import recommendation
+from api.v1.routers import recommendation, search
 import logging
 
 
@@ -24,6 +24,7 @@ app.add_middleware(
 
 
 app.include_router(recommendation.router, prefix="/api/v1", tags=["Recommendation"])
+app.include_router(search.router, prefix="/api/v1", tags=["Search"])
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):

@@ -8,4 +8,5 @@ venv/
 volumes/
 
 #ignore .env
-.env
+.env.backend
+.env.src
