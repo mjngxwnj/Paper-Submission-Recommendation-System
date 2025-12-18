@@ -50,5 +50,3 @@ class RecommendationService:
 
         except Exception as e:
             print(f"Error in get_recommendations: {e}")
-
-
