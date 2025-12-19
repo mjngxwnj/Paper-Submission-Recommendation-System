@@ -49,7 +49,7 @@ class EmbeddingService:
     
     self._initialize_client()
   
-  # -----------------------------------------------------------------------------------
+  # ----------------------------------------------------------------------------
   def _initialize_client(self):
     current_key = self.api_keys[self.current_key_idx]
     masked_key = f"...{current_key[-4:]}"
@@ -57,7 +57,7 @@ class EmbeddingService:
     
     self.client = genai.Client(api_key=current_key)
   
-  # -----------------------------------------------------------------------------------
+  # ----------------------------------------------------------------------------
   def _rotate_key(self) -> bool:
     next_idx = self.current_key_idx + 1
     if next_idx >= len(self.api_keys):
@@ -70,7 +70,7 @@ class EmbeddingService:
     time.sleep(0.5)
     return True
   
-  # -----------------------------------------------------------------------------------
+  # ----------------------------------------------------------------------------
   def _call_embed_api(self, contents, task_type):
     """
     Centralized API call with retry, error handling and key rotation.
@@ -115,7 +115,7 @@ class EmbeddingService:
       
     raise RuntimeError("Max retry limit exceeded.")
 
-  # -----------------------------------------------------------------------------------
+  # ----------------------------------------------------------------------------
   def embed_documents(self, texts: List[str]) -> List[List[float]]:
     """
     Generate embeddings for dataset documents (combined_text).
@@ -134,7 +134,7 @@ class EmbeddingService:
     response = self._call_embed_api(contents, "RETRIEVAL_DOCUMENT")
     return [emb.values for emb in response.embeddings]
   
-  # -----------------------------------------------------------------------------------
+  # ----------------------------------------------------------------------------
   def embed_query(self, text: str) -> np.ndarray:
     """
     Generate an embedding for user input combined_text.
@@ -150,7 +150,7 @@ class EmbeddingService:
     response = self._call_embed_api(contents, "RETRIEVAL_QUERY")
     return np.array(response.embeddings[0].values)
 
-  # -----------------------------------------------------------------------------------
+  # ----------------------------------------------------------------------------
   def generate_in_batches(self, df: pd.DataFrame) -> pd.DataFrame:
     """
     Generate embeddings for a full DataFrame in batches and return

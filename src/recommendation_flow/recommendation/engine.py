@@ -1,6 +1,8 @@
 from typing import List, Dict, Any
 from integration.secrets import get_api_key
 from src.warehouse.core.session import postgres_session
+
+from recommendation_flow.preprocessing.data_processor import DataPreprocessor
 from recommendation_flow.preprocessing.data_combiner import DocumentCombiner
 from recommendation_flow.embedding.embedding_service import EmbeddingService
 
@@ -29,12 +31,38 @@ class RecommendationEngine:
     self.filter_top_k = filter_top_k
     self.rrf_k = rrf_k
     self.final_top_k = final_top_k
+    self.processor = DataPreprocessor()
     self.combiner = DocumentCombiner()
     self.embedding = EmbeddingService(api_key=get_api_key("GOOGLE_API_KEY"))
     
-  def search(self, user_query: str) -> List[Dict[str, Any]]:
-    combined_query = self.combiner.combine_user_query(user_query)
-    embed_query = self.embedding.embed_query(combined_query).tolist()
+  # ----------------------------------------------------------------------------
+  def search(
+    self, 
+    user_title: str, 
+    user_abstract: str, 
+    user_keyword: str
+  ) -> List[Dict[str, Any]]:
+    processed_query = self.processor.process_user_input(
+      title=user_title,
+      abstract=user_abstract,
+      keyword=user_keyword
+    )
+    
+    vector_search_query = self.combiner.combine_user_query(
+      title=processed_query["title"],
+      abstract=processed_query["abstract"],
+      keyword=processed_query["keyword"],
+      task="VECTOR_SEARCH"
+    )
+    
+    keyword_search_query = self.combiner.combine_user_query(
+      title=processed_query["title"],
+      abstract=processed_query["abstract"],
+      keyword=processed_query["keyword"],
+      task="KEYWORD_SEARCH"
+    )
+    
+    embed_query = self.embedding.embed_query(vector_search_query).tolist()
     
     results = []
     
@@ -83,7 +111,7 @@ class RecommendationEngine:
           r.doi, r.title, r.abstract, r.combined_text, 
           v.name as venue_name,
           r.rrf_score
-        FROM rrf_reranking r
+        FROM rrf_ranking r
         LEFT JOIN core.venue v ON r.venue_id = v.venue_id
         ORDER BY r.rrf_score DESC
         LIMIT %s;
@@ -91,7 +119,7 @@ class RecommendationEngine:
 
         params = (
           embed_query, embed_query, self.filter_top_k,
-          user_query, user_query, user_query, self.filter_top_k,
+          keyword_search_query, keyword_search_query, keyword_search_query, self.filter_top_k,
           self.rrf_k, self.rrf_k,
           self.final_top_k
         )

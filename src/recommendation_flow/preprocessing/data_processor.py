@@ -14,7 +14,8 @@ class DataPreprocessor:
   """
   def __init__(self) -> None:
     pass
-
+  
+  # ----------------------------------------------------------------------------
   @staticmethod
   def preprocess_text(text: str) -> str:
     """
@@ -51,6 +52,7 @@ class DataPreprocessor:
 
     return text.strip()
 
+  # ----------------------------------------------------------------------------
   @staticmethod
   def convert_str_to_list(x) -> list[str]:
     """
@@ -82,6 +84,7 @@ class DataPreprocessor:
       return [x.strip()]
     return [str(x).strip()]
 
+  # ----------------------------------------------------------------------------
   @staticmethod
   def clean_keyword(keywords: list[str]) -> list[str]:
     """
@@ -125,6 +128,7 @@ class DataPreprocessor:
 
     return result
 
+  # ----------------------------------------------------------------------------
   def transform(self, df: pd.DataFrame) -> pd.DataFrame:
     """
     Apply preprocessing pipeline to a DataFrame.
@@ -148,3 +152,21 @@ class DataPreprocessor:
       df["keyword"] = df["keyword"].apply(self.clean_keyword)
 
     return df
+  
+  # ----------------------------------------------------------------------------
+  def process_user_input(self, title: str, abstract: str, keyword: str) -> dict:
+    """
+    Preprocess user input fields.
+
+    Returns:
+      dict with keys: title, abstract, keyword
+    """
+    processed_title = self.preprocess_text(title)
+    processed_abstract = self.preprocess_text(abstract)
+    processed_keyword = keyword.lower()
+    
+    return {
+      "title": processed_title,
+      "abstract": processed_abstract,
+      "keyword": processed_keyword
+    }

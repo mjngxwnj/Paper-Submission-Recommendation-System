@@ -5,7 +5,6 @@ class DocumentDeduplicator:
   Deduplicate documents after combined_text creation.
   Ensures 1 embedding per DOI.
   """
-  
   @staticmethod
   def deduplicator_by_doi(df: pd.DataFrame) -> pd.DataFrame:
     """
