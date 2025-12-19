@@ -1,120 +1,94 @@
-import sys
 import os
-from typing import Optional, List, Dict, Any
+import logging
+from typing import Optional, List, Dict
 
+from .utils import UserInputProcessor
+from .embedding_service import EmbeddingService
 from api.v1.models import ConferenceRecommendation
 
 class RecommendationService:
-  """
-  Core engine for retrieving and ranking research papers based on user queries.
+  def __init__(self):
+    self.processor = UserInputProcessor()
+    self.embedding_service = EmbeddingService(api_key=os.getenv("GOOGLE_API_KEY"))
   
-  This class implements a Hybrid Search strategy combining:
-  1. Semantic Search (Vector Similarity via HNSW)
-  2. Keyword Search (BM25/TF-IDF via Postgres Full Text Search)
-  
-  The results are merged and re-ranked using Reciprocal Rank Fusion (RRF) algorithm.
-  Final results are enriched with metadata (Venue Name) via SQL Joins.
-  """
-  def __init__(
-    self, 
-    filter_top_k: int = 100, 
-    rrf_k: int = 60, 
-    final_top_k: int = 10
-  ):
-    """
-    Initialize the recommendation engine configuration.
-
-    Args:
-      filter_top_k (int): Number of candidates to retrieve from EACH method (Vector & Keyword).
-                          Total candidates before RRF will be <= 2 * filter_top_k.
-      rrf_k (int): The smoothing constant 'k' in RRF formula: 1 / (k + rank).
-                   Higher values dampen the impact of high rankings.
-      final_top_k (int): The final number of recommendations to return to the user.
-    """
-    self.filter_top_k = filter_top_k
-    self.rrk_k = rrf_k
-    self.final_top_k = final_top_k
-    self.processor = DataPreprocessor()
-    self.combiner = DocumentCombiner()
-    self.embedding = EmbeddingService(api_key=get_api_key("GOOGLE_API_KEY"))
-
-  async def handle_user_input(
-    self, 
-    user_title: Optional[str],
-    user_abtract: Optional[str],
-    user_keyword: Optional[str]
-  ) -> Dict[str, Any]:
+  # ----------------------------------------------------------------------------
+  def handle_user_query(
+    self,
+    user_title: Optional[str] = None,
+    user_abstract: Optional[str] = None,
+    user_keyword: Optional[str] = None
+  ) -> Dict[str, str]:
     processed_query = self.processor.process_user_input(
       title=user_title,
-      abstract=user_abtract,
+      abstract=user_abstract,
       keyword=user_keyword
     )
     
-    vector_search_query = self.combiner.combine_user_query(
+    vector_search = self.processor.combine_user_query(
       title=processed_query["title"],
       abstract=processed_query["abstract"],
       keyword=processed_query["keyword"],
-      task="VECTOR_SEARCH"
+      task_type="VECTOR_SEARCH"
     )
     
-    keyword_search_query = self.combiner.combine_user_query(
+    keyword_search = self.processor.combine_user_query(
       title=processed_query["title"],
       abstract=processed_query["abstract"],
       keyword=processed_query["keyword"],
-      task="KEYWORD_SEARCH"
+      task_type="KEYWORD_SEARCH"
     )
     
     return {
-      "vector_search_query": vector_search_query,
-      "keyword_search_query": keyword_search_query
+      "vector_search_query": vector_search,
+      "keyword_search_query": keyword_search
     }
     
   async def get_recommendations(
     self,
     title: Optional[str] = None,
     abstract: Optional[str] = None,
-    keywords: Optional[str] = None,
+    keyword: Optional[str] = None,
   ) -> List[ConferenceRecommendation]:
     """
-    Get conference recommendations based on paper input.
-
+    Orchestrates the recommendation flow:
+    Input -> Preprocess -> Hybrid Search (via EmbeddingService) -> Format Output
+    
     Args:
-      title: Paper title
-      abstract: Paper abstract
-      keywords: Paper keywords
+      title (Optional[str]): The user-provided title query.
+      abstract (Optional[str]): The user-provided abstract query.
+      keyword (Optional[str]): The user-provided keywords.
       
     Returns:
-        List of conference recommendations
+      List of conference recommendations
     """
     try:
-      queries = await self.handle_user_input(
+      processed_user_input = self.handle_user_query(
         user_title=title,
-        user_abtract=abstract,
-        user_keyword=keywords
+        user_abstract=abstract,
+        user_keyword=keyword
       )
       
-      vector_query = queries["vector_search_query"]
-      keyword_query = queries["keyword_search_query"]
+      results = self.embedding_service.hybrid_search_rrf(
+        vector_search_query=processed_user_input["vector_search_query"],
+        keyword_search_query=processed_user_input["keyword_search_query"]
+      )
       
-      query_embedding = self.embedding.embed_query(vector_query).tolist()
+      recommendations = []
+      seen_venues = set()
       
-      # TODO
-      # write config ORM for vector & keyword search + reranking with RRF
+      for item in results:
+        venue_name = item["name"]
+        
+        if venue_name not in seen_venues:
+          recommendations.append(
+            ConferenceRecommendation(conference_name=venue_name)
+          )
+          seen_venues.add(venue_name)
 
-      # Sample return
-      return [
-        ConferenceRecommendation(
-            conference_name="International Conference on Machine Learning"
-        ),
-        ConferenceRecommendation(
-            conference_name="Neural Information Processing Systems"
-        ),
-        ConferenceRecommendation(
-            conference_name="ACL – Annual Meeting of the Association for Computational Linguistics"
-        ),
-      ][:self.final_top_k]
+      return recommendations
 
     except Exception as e:
-      print(f"Error in get_recommendations: {e}")
+      logging.error(f"Error in get recommendations: {e}")
+      return []
 
 

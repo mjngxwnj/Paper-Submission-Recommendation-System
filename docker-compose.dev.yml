@@ -58,7 +58,7 @@ services:
       - ./pipelines/dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
     env_file:
-      - .env
+      - .env.src
     environment:
       PYTHONPATH: /opt/airflow/src
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -87,4 +87,4 @@ services:
     volumes:
       - ./backend:/app
     env_file:
-      - .env
+      - .env.backend
