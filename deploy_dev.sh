@@ -31,24 +31,24 @@ info "Step 1: Starting Docker containers..."
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 success "Docker containers started."
 
-info "Step 2: Waiting for Airflow to be healthy..."
-
-MAX_WAIT=180
-INTERVAL=5
-ELAPSED=0
-
-while ! curl -sSf http://localhost:8080/ >/dev/null; do
-  if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
-    error "Timeout waiting for Airflow. Exiting."
-    exit 1
-  fi
-  warn "Airflow not ready yet, waiting ${INTERVAL}s..."
-  sleep $INTERVAL
-  ELAPSED=$((ELAPSED + INTERVAL))
-done
-
-success "Airflow is healthy!"
-
+#info "Step 2: Waiting for Airflow to be healthy..."
+#
+#MAX_WAIT=180
+#INTERVAL=5
+#ELAPSED=0
+#
+#while ! curl -sSf http://localhost:8080/ >/dev/null; do
+#  if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+#    error "Timeout waiting for Airflow. Exiting."
+#    exit 1
+#  fi
+#  warn "Airflow not ready yet, waiting ${INTERVAL}s..."
+#  sleep $INTERVAL
+#  ELAPSED=$((ELAPSED + INTERVAL))
+#done
+#
+#success "Airflow is healthy!"
+#
 #info "Step 4: Setting up Airflow connections..."
 #
 #info "  4.1: Configuring MongoDB connection..."
