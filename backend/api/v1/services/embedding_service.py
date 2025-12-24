@@ -138,7 +138,7 @@ class EmbeddingService:
         k = stmt_keyword("k")
         
         score_vec = func.coalesce(1.0/ (rrf_k + s.c.rank_vec), 0.0)
-        score_ts = func.coalesce(1.0 / (rrf_k + k.c.ranks_ts), 0.0)
+        score_ts = func.coalesce(1.0 / (rrf_k + k.c.rank_ts), 0.0)
         
         rrf_score_col = (score_vec + score_ts).label("rrf_score")
         final_venue_id = func.coalesce(s.c.venue_id, k.c.venue_id).label("venue_id")
