@@ -8,7 +8,7 @@ class UserInputProcessor:
     pass
   
   # ----------------------------------------------------------------------------
-  def preprocess_text(text: str) -> str:
+  def preprocess_text(self, text: str) -> str:
     """
     Normalize and clean text for 'title' and 'abstract' fields.
 
@@ -20,7 +20,7 @@ class UserInputProcessor:
            Returns an empty string if input is not a string.
     """
     if not isinstance(text, str):
-      return
+      return ""
     
     text = text.lower()
     
@@ -68,6 +68,7 @@ class UserInputProcessor:
     
   # ----------------------------------------------------------------------------  
   def combine_user_query(
+    self,
     title: Optional[str] = None, 
     abstract: Optional[str] = None, 
     keyword: Optional[str] = None,
