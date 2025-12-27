@@ -8,7 +8,7 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, Text, Computed, ForeignKey, select, desc, func
+from sqlalchemy import String, Integer, Text, ForeignKey, select, desc, func
 
 from .db_service import get_db_session
 
@@ -18,14 +18,14 @@ class Base(DeclarativeBase):
 
 class Venue(Base):
   __tablename__ = "venue"
-  __table_args__ = {"schemas": "core"}
+  __table_args__ = {"schema": "core"}
   
   id: Mapped[int] = mapped_column(Integer, primary_key=True)
   name: Mapped[str] = mapped_column(String(512))
   
 class Paper(Base):
   __tablename__ = "paper"
-  __table_args__ = {"schemas": "core"}
+  __table_args__ = {"schema": "core"}
   
   doi: Mapped[str] = mapped_column(String(255), primary_key=True)
   title: Mapped[str] = mapped_column(Text)
@@ -34,10 +34,7 @@ class Paper(Base):
   venue_id: Mapped[int] = mapped_column(ForeignKey("core.venue.id"))
   
   embedding = mapped_column(Vector(768))
-  tsv = mapped_column(
-    TSVECTOR,
-    Computed("to_tsvector('english', coalesce(combined_text, ''))", persisted=True)
-  )
+  tsv = mapped_column(TSVECTOR)
   
   venue = relationship("Venue")
 
@@ -55,7 +52,7 @@ class EmbeddingService:
   # ----------------------------------------------------------------------------
   def embed_user_query(self, text: str) -> np.array:
     if not text:
-      return ""
+      return np.array([])
     
     contents = [{"parts": [{"text": text}]}]
     try:
@@ -95,8 +92,8 @@ class EmbeddingService:
     Return:
       List of top recommended venues coressponding with the rrf scores.
     """
-    user_embedding = self.embed_user_query(vector_search_query).tolist()
-    if not user_embedding:
+    user_embedding = self.embed_user_query(vector_search_query)
+    if user_embedding is None or len(user_embedding) == 0:
       return []
     
     results = []
@@ -104,7 +101,7 @@ class EmbeddingService:
     with get_db_session() as session:
       try:
         # SEMANTIC SEARCH CTE (Search by vector)
-        distance_col = Paper.embedding.cosine_distance(user_embedding)
+        distance_col = Paper.embedding.cosine_distance(user_embedding.tolist())
         
         stmt_semantic = (
           select(
@@ -134,8 +131,8 @@ class EmbeddingService:
         )
         
         # RRF CALCULATION (Combine with 2 CTEs)
-        s = stmt_semantic("s")
-        k = stmt_keyword("k")
+        s = stmt_semantic("s").alias("s")
+        k = stmt_keyword("k").alias("k")
         
         score_vec = func.coalesce(1.0/ (rrf_k + s.c.rank_vec), 0.0)
         score_ts = func.coalesce(1.0 / (rrf_k + k.c.rank_ts), 0.0)
@@ -155,7 +152,7 @@ class EmbeddingService:
         
         final_query = (
           select(
-            Venue.name,
+            Venue.name.label("target_venue"),
             r.c.rrf_score
           )
           .select_from(r)
@@ -167,9 +164,9 @@ class EmbeddingService:
         rows = session.execute(final_query).all()
         
         for row in rows:
-          if row.name:
+          if row.target_venue:
             results.append({
-              "venue": row.name,
+              "target_venue": row.target_venue,
               "score": float(row.rrf_score)
             })
     

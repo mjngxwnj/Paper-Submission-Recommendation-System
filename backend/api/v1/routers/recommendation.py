@@ -1,16 +1,15 @@
 import time
 from fastapi import APIRouter, HTTPException, Query
 from api.v1.services.recommendation_service import RecommendationService
-from api.v1.database import (
+from api.v1.models import (
     ConferenceRecommendation,
     RecommendationResponse,
     PaperInput
 )
-
+from api.v1.services import recommendation_service
 
 router = APIRouter()
 recommendation_service = RecommendationService()
-
 
 @router.post(
     '/recommend',
