@@ -24,7 +24,7 @@ psycopg2-binary>=2.9
 
 # === NLP & LLM ===
 google-genai>=0.3.0
-
+google-api-core>=2.0.0
 #scikit-learn==1.5.2
 # nltk==3.9.1
 # spacy==3.7.6
