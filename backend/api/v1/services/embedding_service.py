@@ -8,7 +8,7 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, Text, ForeignKey, select, desc, func
+from sqlalchemy import String, Integer, Text, Computed, ForeignKey, select, desc, func
 
 from .db_service import get_db_session
 
@@ -34,7 +34,10 @@ class Paper(Base):
   venue_id: Mapped[int] = mapped_column(ForeignKey("core.venue.id"))
   
   embedding = mapped_column(Vector(768))
-  tsv = mapped_column(TSVECTOR)
+  tsv = mapped_column(
+    TSVECTOR,
+    Computed("to_tsvector('english', coalesce(combined_text, ''))", persisted=True)                  
+  )
   
   venue = relationship("Venue")
 
@@ -93,7 +96,7 @@ class EmbeddingService:
       List of top recommended venues coressponding with the rrf scores.
     """
     user_embedding = self.embed_user_query(vector_search_query)
-    if user_embedding is None or len(user_embedding) == 0:
+    if user_embedding is None or user_embedding.size == 0:
       return []
     
     results = []
@@ -115,7 +118,7 @@ class EmbeddingService:
         )
         
         # KEYWORD SEARCH CTE (Search by text or full text search)
-        ts_query = func.websearch_to_query('english', keyword_search_query)
+        ts_query = func.websearch_to_tsquery('english', keyword_search_query)
         rank_col = func.ts_rank(Paper.tsv, ts_query)
         
         stmt_keyword = (
@@ -131,8 +134,8 @@ class EmbeddingService:
         )
         
         # RRF CALCULATION (Combine with 2 CTEs)
-        s = stmt_semantic("s").alias("s")
-        k = stmt_keyword("k").alias("k")
+        s = stmt_semantic.alias("s")
+        k = stmt_keyword.alias("k")
         
         score_vec = func.coalesce(1.0/ (rrf_k + s.c.rank_vec), 0.0)
         score_ts = func.coalesce(1.0 / (rrf_k + k.c.rank_ts), 0.0)

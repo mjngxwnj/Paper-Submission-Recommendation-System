@@ -53,8 +53,7 @@ async def recommend_conference(
         recommendations = await recommendation_service.get_recommendations(
             title=paper.title,
             abstract=paper.abstract,
-            keywords=paper.keywords,
-            top_k=top_k
+            keyword=paper.keywords,
         )
 
         processing_time = (time.time() - start_time) * 1000

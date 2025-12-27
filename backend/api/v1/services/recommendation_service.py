@@ -77,7 +77,7 @@ class RecommendationService:
       seen_venues = set()
       
       for item in results:
-        venue_name = item["name"]
+        venue_name = item["target_venue"]
         
         if venue_name not in seen_venues:
           recommendations.append(
