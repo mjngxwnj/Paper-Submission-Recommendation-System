@@ -15,43 +15,43 @@ services:
     depends_on:
       - postgres
 
-  #  # MongoDB
-  #  mongodb:
-  #    image: mongo:6.0
-  #    expose:
-  #      - "27017"
-  #    volumes:
-  #      - mongo_data:/data/db
-  #
-  #  # MongoDB UI
-  #  mongodb_ui:
-  #    image: mongo-express:1.0.0
-  #    expose:
-  #      - "8081"
-  #    depends_on:
-  #      - mongodb
-  #
-  #  # Airflow
-  #  airflow-db:
-  #    image: postgres:15
-  #    expose:
-  #      - "5432"
-  #    volumes:
-  #      - airflow_data:/var/lib/postgresql/data
-  #
-  #  airflow:
-  #    build: ./pipelines
-  #    expose:
-  #      - "8080"
-  #    depends_on:
-  #      - airflow-db
+  # MongoDB
+  mongodb:
+    image: mongo:6.0
+    expose:
+      - "27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # MongoDB UI
+  mongodb_ui:
+    image: mongo-express:1.0.0
+    expose:
+      - "8081"
+    depends_on:
+      - mongodb
+
+  # Airflow
+  airflow-db:
+    image: postgres:15
+    expose:
+      - "5432"
+    volumes:
+      - airflow_data:/var/lib/postgresql/data
+
+  airflow:
+    build: ./pipelines
+    expose:
+      - "8080"
+    depends_on:
+      - airflow-db
 
   # Backend
   backend:
     build: ./backend
     expose:
       - "8000"
-#volumes:
-#  mongo_data:
-#  postgres_data:
-#  airflow_data:
+volumes:
+  mongo_data:
+  postgres_data:
+  airflow_data:
