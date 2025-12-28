@@ -23,8 +23,8 @@ app.add_middleware(
 )
 
 
-app.include_router(recommendation.router, prefix="/api/v1", tags=["Recommendation"])
-app.include_router(search.router, prefix="/api/v1", tags=["Search"])
+app.include_router(recommendation.router, prefix="/api/v1")
+app.include_router(search.router, prefix="/api/v1")
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
