@@ -18,14 +18,14 @@ class Base(DeclarativeBase):
 
 class Venue(Base):
   __tablename__ = "venue"
-  __table_args__ = {"schemas": "core"}
+  __table_args__ = {"schema": "core"}
   
   id: Mapped[int] = mapped_column(Integer, primary_key=True)
   name: Mapped[str] = mapped_column(String(512))
   
 class Paper(Base):
   __tablename__ = "paper"
-  __table_args__ = {"schemas": "core"}
+  __table_args__ = {"schema": "core"}
   
   doi: Mapped[str] = mapped_column(String(255), primary_key=True)
   title: Mapped[str] = mapped_column(Text)
@@ -36,7 +36,7 @@ class Paper(Base):
   embedding = mapped_column(Vector(768))
   tsv = mapped_column(
     TSVECTOR,
-    Computed("to_tsvector('english', coalesce(combined_text, ''))", persisted=True)
+    Computed("to_tsvector('english', coalesce(combined_text, ''))", persisted=True)                  
   )
   
   venue = relationship("Venue")
@@ -55,7 +55,7 @@ class EmbeddingService:
   # ----------------------------------------------------------------------------
   def embed_user_query(self, text: str) -> np.array:
     if not text:
-      return ""
+      return np.array([])
     
     contents = [{"parts": [{"text": text}]}]
     try:
@@ -95,8 +95,8 @@ class EmbeddingService:
     Return:
       List of top recommended venues coressponding with the rrf scores.
     """
-    user_embedding = self.embed_user_query(vector_search_query).tolist()
-    if not user_embedding:
+    user_embedding = self.embed_user_query(vector_search_query)
+    if user_embedding is None or user_embedding.size == 0:
       return []
     
     results = []
@@ -104,7 +104,7 @@ class EmbeddingService:
     with get_db_session() as session:
       try:
         # SEMANTIC SEARCH CTE (Search by vector)
-        distance_col = Paper.embedding.cosine_distance(user_embedding)
+        distance_col = Paper.embedding.cosine_distance(user_embedding.tolist())
         
         stmt_semantic = (
           select(
@@ -118,7 +118,7 @@ class EmbeddingService:
         )
         
         # KEYWORD SEARCH CTE (Search by text or full text search)
-        ts_query = func.websearch_to_query('english', keyword_search_query)
+        ts_query = func.websearch_to_tsquery('english', keyword_search_query)
         rank_col = func.ts_rank(Paper.tsv, ts_query)
         
         stmt_keyword = (
@@ -134,8 +134,8 @@ class EmbeddingService:
         )
         
         # RRF CALCULATION (Combine with 2 CTEs)
-        s = stmt_semantic("s")
-        k = stmt_keyword("k")
+        s = stmt_semantic.alias("s")
+        k = stmt_keyword.alias("k")
         
         score_vec = func.coalesce(1.0/ (rrf_k + s.c.rank_vec), 0.0)
         score_ts = func.coalesce(1.0 / (rrf_k + k.c.rank_ts), 0.0)
@@ -155,7 +155,7 @@ class EmbeddingService:
         
         final_query = (
           select(
-            Venue.name,
+            Venue.name.label("target_venue"),
             r.c.rrf_score
           )
           .select_from(r)
@@ -167,9 +167,9 @@ class EmbeddingService:
         rows = session.execute(final_query).all()
         
         for row in rows:
-          if row.name:
+          if row.target_venue:
             results.append({
-              "venue": row.name,
+              "target_venue": row.target_venue,
               "score": float(row.rrf_score)
             })
     
