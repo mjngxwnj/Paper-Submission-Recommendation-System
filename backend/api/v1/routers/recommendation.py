@@ -1,24 +1,21 @@
 import time
 from fastapi import APIRouter, HTTPException, Query
 from api.v1.services.recommendation_service import RecommendationService
-from api.v1.models import (
-    ConferenceRecommendation,
-    RecommendationResponse,
-    PaperInput
-)
 from api.v1.services import recommendation_service
+from api.v1.schemas.paper import PaperRecommendInput
+from api.v1.schemas.recommendation import RecommendationResponse
 
-router = APIRouter()
+router = APIRouter(prefix="/recommend", tags=["Recommendation"])
 recommendation_service = RecommendationService()
 
 @router.post(
-    '/recommend',
+    '/',
     response_model = RecommendationResponse,
     summary="Get conference recommendations",
     description="Recommend conferences based on paper title, abstract, and/or keywords"
 )
 async def recommend_conference(
-    paper: PaperInput,
+    paper: PaperRecommendInput,
     top_k: int = Query(5, ge=1, le=50, description="Number of top recommendations to return")
 ) -> RecommendationResponse:
     """
