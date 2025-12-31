@@ -4,7 +4,7 @@ from typing import Optional, List, Dict
 
 from .utils import UserInputProcessor
 from .embedding_service import EmbeddingService
-from api.v1.models import ConferenceRecommendation
+from api.v1.schemas.recommendation import ConferenceRecommendation
 
 class RecommendationService:
   def __init__(self):
