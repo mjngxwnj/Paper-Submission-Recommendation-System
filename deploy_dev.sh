@@ -31,47 +31,47 @@ info "Step 1: Starting Docker containers..."
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 success "Docker containers started."
 
-#info "Step 2: Waiting for Airflow to be healthy..."
-#
-#MAX_WAIT=180
-#INTERVAL=5
-#ELAPSED=0
-#
-#while ! curl -sSf http://localhost:8080/ >/dev/null; do
-#  if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
-#    error "Timeout waiting for Airflow. Exiting."
-#    exit 1
-#  fi
-#  warn "Airflow not ready yet, waiting ${INTERVAL}s..."
-#  sleep $INTERVAL
-#  ELAPSED=$((ELAPSED + INTERVAL))
-#done
-#
-#success "Airflow is healthy!"
-#
-#info "Step 4: Setting up Airflow connections..."
-#
-#info "  4.1: Configuring MongoDB connection..."
-#(docker exec airflow airflow connections delete mongo_default || true) >/dev/null 2>&1
-#(docker exec airflow airflow connections add mongo_default \
-#  --conn-type mongo \
-#  --conn-host mongodb \
-#  --conn-port 27017 \
-#  --conn-login admin \
-#  --conn-password admin \
-#  --conn-schema raw_papers) >/dev/null 2>&1
-#success "MongoDB connection configured."
-#
-#info "  4.2: Configuring PostgreSQL connection..."
-#(docker exec airflow airflow connections delete postgres_default || true) >/dev/null 2>&1
-#(docker exec airflow airflow connections add postgres_default \
-#  --conn-type postgres \
-#  --conn-host postgres \
-#  --conn-port 5432 \
-#  --conn-login admin \
-#  --conn-password admin \
-#  --conn-schema rcm_papers) >/dev/null 2>&1
-#success "PostgreSQL connection configured."
+info "Step 2: Waiting for Airflow to be healthy..."
+
+MAX_WAIT=180
+INTERVAL=5
+ELAPSED=0
+
+while ! curl -sSf http://localhost:8080/ >/dev/null; do
+  if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+    error "Timeout waiting for Airflow. Exiting."
+    exit 1
+  fi
+  warn "Airflow not ready yet, waiting ${INTERVAL}s..."
+  sleep $INTERVAL
+  ELAPSED=$((ELAPSED + INTERVAL))
+done
+
+success "Airflow is healthy!"
+
+info "Step 4: Setting up Airflow connections..."
+
+info "  4.1: Configuring MongoDB connection..."
+(docker exec airflow airflow connections delete mongo_default || true) >/dev/null 2>&1
+(docker exec airflow airflow connections add mongo_default \
+  --conn-type mongo \
+  --conn-host mongodb \
+  --conn-port 27017 \
+  --conn-login admin \
+  --conn-password admin \
+  --conn-schema raw_papers) >/dev/null 2>&1
+success "MongoDB connection configured."
+
+info "  4.2: Configuring PostgreSQL connection..."
+(docker exec airflow airflow connections delete postgres_default || true) >/dev/null 2>&1
+(docker exec airflow airflow connections add postgres_default \
+  --conn-type postgres \
+  --conn-host postgres \
+  --conn-port 5432 \
+  --conn-login admin \
+  --conn-password admin \
+  --conn-schema rcm_papers) >/dev/null 2>&1
+success "PostgreSQL connection configured."
 
 info "Step 5: Waiting for PostgreSQL to be healthy..."
 
