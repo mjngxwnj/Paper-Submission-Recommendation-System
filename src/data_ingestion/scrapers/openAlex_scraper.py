@@ -1,0 +1,135 @@
+from data_ingestion.scrapers.base_scraper import BaseScraper
+import pyalex
+from pyalex import config,Works
+import time
+import os
+import requests
+import crossref.restful
+import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
+class openAlexScraper(BaseScraper):
+    FIELD = "Computer Science"
+    FIELD_ID = "C41008148"
+    DATA_NEED = ["id","title","publication_year","type","language","doi",
+                "concepts","authorships","locations","primary_location","cited_by_count",
+                "primary_topic","keywords"]
+    MAX_RESULTS = 1000
+    MAX_RETRIES = 3
+    
+    def __init__(self):
+        self.configure()
+        
+    def configure(self):
+        pyalex.config.email = "thuattruongminh@gmail.com"
+        config.max_retries = 3
+        config.retry_backoff_factor = 0.1
+        config.retry_http_codes = [429, 500, 503]  
+    # config for crawl abstract
+    def etiquette(self):
+        return {
+        "application_name": "PaperSubmission",
+        "application_version": "1.0",
+        "application_url": "https://github.com/mjngxwnj/Paper-Submission-Recommendation-System.git",
+        "contact_email": "22110218@student.hcmus.edu.vn"
+    }
+    def get_abstract(self,doi, retries:int = 3, backoff:float = 1.0):
+        abstrat_record = crossref.restful.Works(etiquette= self.etiquette())
+        for attempt in range(1,retries + 1):
+            try:
+                data = abstrat_record.doi(doi)
+                if not data:
+                    return {"doi":doi,"abstract":None,"date":None}
+                abstract = data.get("abstract",None)
+                if abstract:
+                    clean_abstract = re.sub("<[^<]+?>", "", abstract)
+                else:
+                    clean_abstract = "None"
+                created = data.get("created",{})
+                date = created.get("date-time",None)
+                return {"doi":doi,"abstract":clean_abstract.strip(),"date":date}
+            except Exception as e:
+                print(f"[Attempt {attempt}/{retries}] Lỗi khi lấy {doi}: {e}")
+                if attempt < retries:
+                    sleep_time = backoff * 2 * attempt
+                    print(f"Waitting {sleep_time} before retries")
+                    time.sleep(sleep_time)
+                else: 
+                    return {"doi": doi,"abstract": None,"date":None}
+    def fetch_abstracts_parallel(self, doi_list: list[str], max_workers: int = 5) -> list[dict]:
+        """
+        Fetch abstract từ Crossref cho nhiều DOI song song bằng ThreadPoolExecutor.
+        """
+        results = []
+
+        def fetch_single(doi):
+            return self.get_abstract(doi)
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(fetch_single, doi) for doi in doi_list]
+            for future in as_completed(futures):
+                try:
+                    results.append(future.result())
+                except Exception as e:
+                    print(f"Error fetching abstract in thread: {e}")
+
+        return results      
+    def fetch_data(self,api_key:str = "",checkpoint = "*") -> list[dict]:
+        cursor = checkpoint
+        print(f"Crawling OpenAlex for field: {self.FIELD}")
+        count_result = 0
+        result = []
+        last_cursor = cursor
+        while count_result < self.MAX_RESULTS:
+            try:
+                start_time = time.time()
+                works = Works().filter(concepts = {"id":self.FIELD_ID}).select(self.DATA_NEED).get(per_page = 200,cursor = cursor)
+                work_list = list(works)
+                if not list(works):
+                    print("No more records")
+                    break
+                print(f"Crawl {len(work_list)} record number")
+                doi_list = [record.get("doi") for record in work_list if record.get("doi")]
+                if doi_list:
+                    abstracts = self.fetch_abstracts_parallel(doi_list, max_workers=5)
+                    abstract_map = {item["doi"]: item for item in abstracts}
+                else:
+                    abstract_map = {}
+                for record in work_list:
+                    doi = record.get("doi")
+                    info = abstract_map.get(doi,None)
+                    if info:
+                        record["abstract"] = info["abstract"]
+                        record["crossref_date"] = info["date"]
+                    else:
+                        record["abstract"] = None
+                        record["crossref_date"] = None
+                    result.append(record)
+                end_time = time.time()
+                duration = end_time - start_time
+                count_result += len(work_list)
+                cursor = works.meta["next_cursor"]
+                last_cursor = cursor
+                if not cursor:
+                    print("No next page to fetch ")
+                    break
+                if duration <= 10:
+                    time.sleep(10 - duration)
+            except (requests.exceptions.RequestException, Exception) as e:
+                print(f"Error occurred: {e}")
+                for i in range(1,self.MAX_RETRIES + 1):
+                    print(f"Retrying {i}/{self.MAX_RETRIES} after {i*self.DELAY} seconds")
+                    time.sleep(i*self.DELAY)
+                    try:
+                        works = Works().filter(concepts={"id": self.FIELD_ID}).select(self.DATA_NEED).get(per_page=200, cursor=cursor)
+                        break
+                    except Exception as e:
+                        if i == self.MAX_RETRIES:
+                            print("Failed to featch data")
+                            return result,last_cursor
+                        continue        
+        print(f"Completed crawling. Total records {count_result}")
+        return result,last_cursor
+
+
+    
+

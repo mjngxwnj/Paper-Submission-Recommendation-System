@@ -1,13 +1,4 @@
 services:
-  # Jupyter Notebook
-  notebook:
-    container_name: notebook
-    build: ./notebooks
-    ports:
-      - "8888:8888"
-    volumes:
-      - .:/workspace
-
   # Postgres
   postgres:
     container_name: postgres
@@ -53,60 +44,47 @@ services:
     ports:
       - "8081:8081"
 
-  # Milvus
-  etcd:
-    environment:
-      - ETCD_AUTO_COMPACTION_MODE=revision
-      - ETCD_AUTO_COMPACTION_RETENTION=1000
-      - ETCD_QUOTA_BACKEND_BYTES=4294967296
-      - ETCD_SNAPSHOT_COUNT=50000
-    volumes:
-      - ./volumes/etcd:/etcd
-    command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
-
-  minio:
-    environment:
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - ./volumes/minio:/minio_data
-    command: minio server /minio_data --console-address ":9001"
-
-  milvus:
-    container_name: milvus
-    command: ["milvus", "run", "standalone"]
-    security_opt:
-      - seccomp:unconfined
-    environment:
-      ETCD_ENDPOINTS: etcd:2379
-      MINIO_ADDRESS: minio:9000
-      MQ_TYPE: woodpecker
-    ports:
-      - "19530:19530"
-      - "9091:9091"
-    volumes:
-      - ./volumes/milvus:/var/lib/milvus
-
   # Airflow
+  airflow-db:
+    container_name: airflow-db
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+
   airflow:
     container_name: airflow
     volumes:
       - ./pipelines/dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
+    env_file:
+      - .env.src
     environment:
       PYTHONPATH: /opt/airflow/src
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__PARALLELISM: 16
+      AIRFLOW__CORE__DAG_CONCURRENCY: 8
+      AIRFLOW__CORE__MAX_ACTIVE_RUNS_PER_DAG: 2
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
     ports:
       - "8080:8080"
     command: >
-      bash -c '(airflow db init && 
-      airflow users create 
-      --username admin 
-      --password admin 
-      --firstname admin 
-      --lastname admin 
+      bash -c '(airflow db init &&
+      airflow users create
+      --username admin
+      --password admin
+      --firstname admin
+      --lastname admin
       --role Admin
       --email admin@gmail.com);
       airflow webserver & airflow scheduler'
+
+  # Backend
+  backend:
+    container_name: paper-submission-rcm-system-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env.backend

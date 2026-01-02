@@ -1,13 +1,7 @@
 services:
-  # Jupyter Notebook
-  notebook:
-    build: ./notebooks
-    expose:
-      - "8888"
-
   # Postgres
   postgres:
-    image: postgres:15
+    image: pgvector/pgvector:pg15
     expose:
       - "5432"
     volumes:
@@ -37,39 +31,27 @@ services:
     depends_on:
       - mongodb
 
-  # Milvus
-  etcd:
-    image: quay.io/coreos/etcd:v3.5.18
-    volumes:
-      - etcd:/etcd
-
-  minio:
-    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
-    expose:
-      - "9001"
-      - "9000"
-    volumes:
-      - minio_data:/minio_data
-
-  milvus:
-    image: milvusdb/milvus:v2.6.3
-    expose:
-      - "19530"
-      - "9091"
-    volumes:
-      - milvus:/var/lib/milvus
-    depends_on:
-      - "etcd"
-      - "minio"
-
   # Airflow
+  airflow-db:
+    image: postgres:15
+    expose:
+      - "5432"
+    volumes:
+      - airflow_data:/var/lib/postgresql/data
+
   airflow:
     build: ./pipelines
     expose:
       - "8080"
+    depends_on:
+      - airflow-db
 
+  # Backend
+  backend:
+    build: ./backend
+    expose:
+      - "8000"
 volumes:
   mongo_data:
   postgres_data:
-  etcd:
-  minio_data:
+  airflow_data:
