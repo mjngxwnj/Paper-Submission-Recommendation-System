@@ -3,43 +3,10 @@ import numpy as np
 from google import genai
 from google.genai import types
 from typing import List, Dict, Any
-
-from pgvector.sqlalchemy import Vector
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.dialects.postgresql import TSVECTOR
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, Text, Computed, ForeignKey, select, desc, func
+from sqlalchemy import select, desc, func
 
 from .db_service import get_db_session
-
-# ============================= ORM CONFIGURATION ==============================
-class Base(DeclarativeBase):
-  pass
-
-class Venue(Base):
-  __tablename__ = "venue"
-  __table_args__ = {"schema": "core"}
-  
-  id: Mapped[int] = mapped_column(Integer, primary_key=True)
-  name: Mapped[str] = mapped_column(String(512))
-  
-class Paper(Base):
-  __tablename__ = "paper"
-  __table_args__ = {"schema": "core"}
-  
-  doi: Mapped[str] = mapped_column(String(255), primary_key=True)
-  title: Mapped[str] = mapped_column(Text)
-  abstract: Mapped[str] = mapped_column(Text)
-  combined_text: Mapped[str] = mapped_column(Text)
-  venue_id: Mapped[int] = mapped_column(ForeignKey("core.venue.id"))
-  
-  embedding = mapped_column(Vector(768))
-  tsv = mapped_column(
-    TSVECTOR,
-    Computed("to_tsvector('english', coalesce(combined_text, ''))", persisted=True)                  
-  )
-  
-  venue = relationship("Venue")
+from api.v1.models import Paper, Venue
 
 # ============================= EMBEDDING SERVICE ==============================
 class EmbeddingService:
