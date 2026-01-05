@@ -1,6 +1,6 @@
 from typing import Literal
-from sqlalchemy.orm import joinedload
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from api.v1.models.paper import Paper
 from api.v1.models.author import Author
 from api.v1.services.db_service import get_db_session
@@ -10,9 +10,18 @@ from api.v1.schemas.paper import PaperSearchInput, PaperResult, SearchPapersResp
 class SearchService:
 
     async def search_papers(self, input: PaperSearchInput) -> SearchPapersResponse:
-        """Search papers by title keyword"""
+        """Search papers by title keyword, author, or specific keywords"""
         with get_db_session() as session:
-            stmt = select(Paper).where(Paper.title.ilike(f"%{input.keyword}%"))
+            stmt = select(Paper)
+
+            if input.keyword:
+                stmt = stmt.where(Paper.title.ilike(f"%{input.keyword}%"))
+            
+            if input.author:
+                stmt = stmt.join(Paper.author).where(Author.name.in_(input.author))
+
+            # Deduplicate results if joins are used
+            stmt = stmt.distinct()
 
             if input.sort == "newest":
                 stmt = stmt.order_by(Paper.publication_year.desc())
@@ -43,6 +52,7 @@ class SearchService:
                 papers=papers_list,
                 query_info={
                     "keyword": input.keyword,
+                    "author": input.author,
                     "limit": input.limit,
                     "sort": input.sort
                 }

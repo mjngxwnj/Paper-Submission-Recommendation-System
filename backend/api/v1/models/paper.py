@@ -30,6 +30,6 @@ class Paper(Base):
 
     # Relationships
     venue = relationship("Venue", back_populates="papers")
-    #authors = relationship("Author", secondary="core.paper_author", back_populates="papers")
-    #keywords: Mapped[list["Keyword"]] = relationship("Keyword", secondary="core.paper_keyword", back_populates="papers")
+    author = relationship("Author", secondary="core.paper_author", back_populates="papers")
+    keyword = relationship("Keyword", secondary="core.paper_keyword", back_populates="papers")
     #ingestion_source: Mapped["IngestionSource"] = relationship("IngestionSource", back_populates="papers")

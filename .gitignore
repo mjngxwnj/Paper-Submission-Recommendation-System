@@ -9,4 +9,5 @@ volumes/
 
 #ignore .env
 .env.backend
+.env.frontend
 .env.src
