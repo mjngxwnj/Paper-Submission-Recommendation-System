@@ -3,7 +3,8 @@ from typing import List, Optional, Dict, Any
 
 class PaperSearchInput(BaseModel):
     """Input model for searching papers by title"""
-    keyword: str = Field(..., description="Keyword to search in paper titles")
+    keyword: Optional[str] = Field(None, description="Keyword to search in paper titles")
+    author: Optional[str] = Field(None, description="Author names to filter by")
     limit: Optional[int] = Field(10, description="Maximum number of results")
     sort: Optional[str] = Field("newest", description="Sort order: newest or oldest")
 
@@ -11,6 +12,7 @@ class PaperSearchInput(BaseModel):
         schema_extra = {
             "example": {
                 "keyword": "NLP",
+                "author": "Huynh Minh Thuan",
                 "limit": 10,
                 "sort": "newest"
             }
@@ -92,6 +94,7 @@ class SearchPapersResponse(BaseModel):
                 ],
                 "query_info": {
                     "keyword": "NLP",
+                    "author": "Huynh Minh Thuan",
                     "limit": 10,
                     "sort": "newest"
                 }
