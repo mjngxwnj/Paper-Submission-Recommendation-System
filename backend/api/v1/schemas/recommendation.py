@@ -4,20 +4,15 @@ from typing import Optional, List, Dict, Any
 class ConferenceRecommendation(BaseModel):
     """Model for a single conference recommendation"""
     conference_name: str = Field(..., description="Conference name")
-#    acronym: Optional[str] = Field(None, description="Conference acronym")
-#    similarity_score: float = Field(..., ge=0, le=1, description="Similarity score (0-1)")
-#    description: Optional[str] = Field(None, description="Conference description")
-#    topics: Optional[List[str]] = Field(None, description="Conference topics")
-#    deadline: Optional[str] = Field(None, description="Submission deadline")
-#    location: Optional[str] = Field(None, description="Conference location")
-#    date: Optional[str] = Field(None, description="Conference date")
-#    website: Optional[str] = Field(None, description="Conference website")
-#    rank: Optional[str] = Field(None, description="Conference ranking (A*, A, B, C)")
+    venue_id: int = Field(..., description="Venue ID")
+    match_score: float = Field(..., description="RRF Match Score")
 
     class Config:
         json_schema_extra = {
             "example": {
-                "conference_name": "International Conference on Machine Learning"
+                "conference_name": "International Conference on Machine Learning",
+                "venue_id": 1,
+                "match_score": 0.85
             }
         }
 

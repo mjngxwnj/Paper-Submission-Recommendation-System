@@ -81,7 +81,11 @@ class RecommendationService:
         
         if venue_name not in seen_venues:
           recommendations.append(
-            ConferenceRecommendation(conference_name=venue_name)
+            ConferenceRecommendation(
+              conference_name=venue_name,
+              venue_id=item["venue_id"],
+              match_score=item["score"]
+            )
           )
           seen_venues.add(venue_name)
 
