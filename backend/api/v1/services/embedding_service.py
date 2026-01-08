@@ -122,6 +122,7 @@ class EmbeddingService:
         
         final_query = (
           select(
+            Venue.id.label("venue_id"),
             Venue.name.label("target_venue"),
             r.c.rrf_score
           )
@@ -137,6 +138,7 @@ class EmbeddingService:
           if row.target_venue:
             results.append({
               "target_venue": row.target_venue,
+              "venue_id": row.venue_id,
               "score": float(row.rrf_score)
             })
     

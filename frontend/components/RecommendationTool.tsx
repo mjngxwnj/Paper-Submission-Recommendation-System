@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Search, X, BookOpen, Lock, LockOpen } from 'lucide-react';
 import { RecommendationRequest, Venue } from '../types';
-import { fetchRecommendations } from '../services/mockBackend';
+import { fetchRecommendations } from '../services/api';
 
 export const RecommendationTool = () => {
   const [formData, setFormData] = useState<RecommendationRequest>({
