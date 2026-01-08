@@ -9,4 +9,4 @@ class Author(Base):
     orcid: Mapped[str] = mapped_column(String(50), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    papers = relationship("Paper", secondary="core.paper_author", back_populates="authors")
+    # papers = relationship("Paper", secondary="core.paper_author", back_populates="authors")
