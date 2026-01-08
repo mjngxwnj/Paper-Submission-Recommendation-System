@@ -1,10 +1,9 @@
 from pydantic import BaseModel, Field, validator
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 
 class PaperSearchInput(BaseModel):
     """Input model for searching papers by title"""
-    keyword: Optional[str] = Field(None, description="Keyword to search in paper titles")
-    author: Optional[str] = Field(None, description="Author names to filter by")
+    keyword: str = Field(..., description="Keyword to search in paper titles")
     limit: Optional[int] = Field(10, description="Maximum number of results")
     sort: Optional[str] = Field("newest", description="Sort order: newest or oldest")
 
@@ -12,7 +11,6 @@ class PaperSearchInput(BaseModel):
         schema_extra = {
             "example": {
                 "keyword": "NLP",
-                "author": "Huynh Minh Thuan",
                 "limit": 10,
                 "sort": "newest"
             }
@@ -23,10 +21,10 @@ class PaperRecommendInput(BaseModel):
     """ Input model for paper submissions """
     title: Optional[str] = Field(None, description="Paper title", max_length=500)
     abstract: Optional[str] = Field(None, description="Paper abstract", max_length=5000)
-    keywords: Optional[List[str]] = Field(None, description="Paper keywords")
+    keyword: Union[str, List[str], None]= Field(None, description="Paper keywords")
 
-    @validator('keywords')
-    def validate_keywords(cls, v):
+    @validator('keyword')
+    def validate_keyword(cls, v):
         if v is not None and len(v) == 0:
             return None
         return v
@@ -42,7 +40,7 @@ class PaperRecommendInput(BaseModel):
             "example": {
                 "title": "Deep Learning for Natural Language Processing",
                 "abstract": "This paper presents a novel approach to NLP using transformer models...",
-                "keywords": ["deep learning", "NLP", "transformers", "BERT"]
+                "keyword": ["deep learning", "NLP", "transformers", "BERT"]
             }
         }
 
@@ -94,7 +92,6 @@ class SearchPapersResponse(BaseModel):
                 ],
                 "query_info": {
                     "keyword": "NLP",
-                    "author": "Huynh Minh Thuan",
                     "limit": 10,
                     "sort": "newest"
                 }

@@ -1,6 +1,7 @@
 import os
 import logging
-from typing import Optional, List, Dict
+import numpy as np
+from typing import Optional, List, Dict, Union, Any
 
 from .utils import UserInputProcessor
 from .embedding_service import EmbeddingService
@@ -16,7 +17,7 @@ class RecommendationService:
     self,
     user_title: Optional[str] = None,
     user_abstract: Optional[str] = None,
-    user_keyword: Optional[str] = None
+    user_keyword: Union[str, List[str], None] = None
   ) -> Dict[str, str]:
     processed_query = self.processor.process_user_input(
       title=user_title,
@@ -42,12 +43,41 @@ class RecommendationService:
       "vector_search_query": vector_search,
       "keyword_search_query": keyword_search
     }
+
+  # ----------------------------------------------------------------------------
+  def _sigmoid_normalization(
+    self, 
+    results: List[Dict[str, Any]], 
+    midpoint: Optional[float] = None
+  ) -> List[Dict[str, Any]]:
+    """
+    Apply sigmoid transformation to normalize RRF scores to a confidence percentage.
+    """
+    if not results:
+      return results
+    
+    scores = np.array([r['score'] for r in results])
+    
+    # Calculate midpoint if not provided
+    if midpoint is None:
+      midpoint = np.median(scores)
+    
+    # Sigmoid transformation
+    k = 1000
+    
+    for i, r in enumerate(results):
+      # Sigmoid: 1 / (1 + e^(-k*(x - midpoint)))
+      sigmoid_score = 1 / (1 + np.exp(-k * (scores[i] - midpoint)))
+      # Scale to 0.5 - 1.0 (50% - 100%)
+      r['score'] = 0.5 + (sigmoid_score * 0.5)
+    
+    return results
     
   async def get_recommendations(
     self,
     title: Optional[str] = None,
     abstract: Optional[str] = None,
-    keyword: Optional[str] = None,
+    keyword: Union[str, List[str], None] = None
   ) -> List[ConferenceRecommendation]:
     """
     Orchestrates the recommendation flow:
@@ -72,6 +102,9 @@ class RecommendationService:
         vector_search_query=processed_user_input["vector_search_query"],
         keyword_search_query=processed_user_input["keyword_search_query"]
       )
+      
+      # Apply Sigmoid Normalization
+      results = self._sigmoid_normalization(results)
       
       recommendations = []
       seen_venues = set()

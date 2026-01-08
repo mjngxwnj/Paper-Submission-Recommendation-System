@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Union
 from google.api_core import exceptions as gexc
 
 # ============================ USER INPUT PROCESSOR ============================
@@ -44,21 +44,61 @@ class UserInputProcessor:
     return text.strip()
   
   # ----------------------------------------------------------------------------
+  def normalize_keywords(self, keyword: Union[str, List[str], None]) -> str:
+    """
+    Convert keywords input (string, list, or None) into a single normalized string.
+    
+    Args:
+      keyword: Can be:
+        - None
+        - String (comma-separated or space-separated)
+        - List of strings
+    
+    Returns:
+      str: Space-separated lowercase keywords
+    
+    Examples:
+      normalize_keywords(['Deep Learning', 'NLP']) -> 'deep learning nlp'
+      normalize_keywords('Deep Learning, NLP') -> 'deep learning nlp'
+      normalize_keywords(None) -> ''
+    """
+    if not keyword:
+      return ""
+    
+    # If it's a list, join with spaces
+    if isinstance(keyword, list):
+      keyword = " ".join(keyword)
+    
+    # If it's a string, clean it
+    if isinstance(keyword, str):
+      # Remove common separators and normalize
+      keyword = re.sub(r'[,;|]+', ' ', keyword)
+      keyword = re.sub(r'\s+', ' ', keyword)
+      return keyword.lower().strip()
+    
+    return ""
+  
+  # ----------------------------------------------------------------------------
   def process_user_input(
     self, 
     title: Optional[str] = None, 
     abstract: Optional[str] = None, 
-    keyword: Optional[str] = None
+    keyword: Union[str, List[str], None] = None
   ) -> Dict[str, str]:
     """
     Preprocess user input fields.
+    
+    Args:
+      title: Paper title
+      abstract: Paper abstract
+      keyword: None/ String (comma-separated or space-separated)/ List of strings
 
     Returns:
       dict with keys: title, abstract, keyword
     """
     processed_title = self.preprocess_text(title)
     processed_abstract = self.preprocess_text(abstract)
-    processed_keyword = str(keyword).lower().strip() if keyword else ""
+    processed_keyword = self.normalize_keywords(keyword)
     
     return {
       "title": processed_title,
@@ -98,7 +138,7 @@ class UserInputProcessor:
     keyword = keyword if keyword else ""
       
     if task_type == "VECTOR_SEARCH":
-      return f"Title: {title} [SEP] Abstract: {abstract} Keyword: {keyword}"
+      return f"Title: {title} [SEP] Abstract: {abstract} [SEP] Keyword: {keyword}"
     
     elif task_type == "KEYWORD_SEARCH":
       parts = [title, abstract, keyword]

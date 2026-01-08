@@ -35,7 +35,8 @@ async def recommend_conference(
 
     start_time = time.time()
 
-    if not paper.title and not paper.abstract and not paper.keywords:
+    # Đang bị set cứng ở đây nên để or 
+    if not paper.title and not paper.abstract and not paper.keyword:
         raise HTTPException(
             status_code=400,
             detail={
@@ -50,7 +51,7 @@ async def recommend_conference(
         recommendations = await recommendation_service.get_recommendations(
             title=paper.title,
             abstract=paper.abstract,
-            keyword=paper.keywords,
+            keyword=paper.keyword,
         )
 
         processing_time = (time.time() - start_time) * 1000
@@ -59,7 +60,7 @@ async def recommend_conference(
         query_info = {
             "has_title": paper.title is not None,
             "has_abstract": paper.abstract is not None,
-            "has_keywords": paper.keywords is not None and len(paper.keywords) > 0,
+            "has_keywords": paper.keyword is not None and len(paper.keyword) > 0,
             "top_k": top_k,
             "processing_time_ms": round(processing_time, 2)
         }
