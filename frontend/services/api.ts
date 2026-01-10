@@ -30,7 +30,7 @@ export const fetchRecommendations = async (request: RecommendationRequest): Prom
     const response = await axios.post<RecommendationResponse>(`${API_URL}/api/v1/recommend/`, {
       title: request.title,
       abstract: request.abstract,
-      keywords: request.keywords ? request.keywords.split(';') : []
+      keyword: request.keywords ? request.keywords.split(';') : []
     });
 
     if (!response.data.success) {

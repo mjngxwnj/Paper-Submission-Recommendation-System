@@ -1,4 +1,4 @@
-import { RecommendationRequest, Venue } from '../types';
+import { RecommendationRequest, Venue, SearchResult } from '../types';
 
 export const fetchRecommendations = async (request: RecommendationRequest): Promise<Venue[]> => {
   // Simulate network delay
@@ -42,4 +42,72 @@ export const fetchRecommendations = async (request: RecommendationRequest): Prom
       matchScore: 85
     }
   ];
+};
+
+export const searchGlobal = async (query: string): Promise<SearchResult[]> => {
+  // Simulate network delay (faster than full recommendation)
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  if (!query || query.trim().length === 0) {
+    return [];
+  }
+
+  const lowerQuery = query.toLowerCase();
+
+  // Mock Data
+  const mockResults: SearchResult[] = [
+    {
+      id: 'j1',
+      type: 'venue',
+      title: 'Knowledge-based Systems',
+      subtitle: 'Journal • IF: 5.01',
+    },
+    {
+      id: 'j2',
+      type: 'venue',
+      title: 'Neural Computing and Applications',
+      subtitle: 'Journal • IF: 4.66',
+    },
+    {
+      id: 'j3',
+      type: 'venue',
+      title: 'Neural Processing Letters',
+      subtitle: 'Journal • IF: 2.64',
+    },
+    {
+      id: 'j4',
+      type: 'venue',
+      title: 'Knowledge and Information Systems',
+      subtitle: 'Journal • IF: 2.55',
+    },
+    {
+      id: 'p1',
+      type: 'paper',
+      title: 'Optimizing Neural Networks with Gradient Descent',
+      subtitle: 'Paper • 2024',
+    },
+    {
+      id: 'p2',
+      type: 'paper',
+      title: 'A Survey on Graph Neural Networks',
+      subtitle: 'Paper • 2024',
+    },
+    {
+      id: 'p3',
+      type: 'paper',
+      title: 'Blockchain in Supply Chain Management',
+      subtitle: 'Paper • 2024',
+    },
+    {
+      id: 'p4',
+      type: 'paper',
+      title: 'Edge Computing Frameworks',
+      subtitle: 'Paper • 2024',
+    }
+  ];
+
+  return mockResults.filter(item =>
+    item.title.toLowerCase().includes(lowerQuery) ||
+    (item.subtitle && item.subtitle.toLowerCase().includes(lowerQuery))
+  );
 };

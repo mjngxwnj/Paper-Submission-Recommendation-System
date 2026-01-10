@@ -1,3 +1,4 @@
+tqdm
 fastapi==0.127.0
 uvicorn[standard]==0.23.2
 psycopg2-binary>=2.9

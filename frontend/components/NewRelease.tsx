@@ -24,11 +24,16 @@ export const NewReleases = () => {
             New Releases
           </h2>
           <div className="flex space-x-2">
-            <button onClick={() => scroll('left')} className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 hover:bg-[#E50914] hover:text-white dark:hover:bg-[#E50914] transition-colors">
-              <ChevronLeft className="w-5 h-5" />
+            <button 
+              onClick={() => scroll('left')} 
+              className="p-2 rounded-full bg-slate-200 dark:bg-black hover:bg-[#E50914] hover:text-white transition-colors">
+              <ChevronLeft className="w-5 h-5 text-slate-900 dark:text-white" />
             </button>
-            <button onClick={() => scroll('right')} className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 hover:bg-[#E50914] hover:text-white dark:hover:bg-[#E50914] transition-colors">
-              <ChevronRight className="w-5 h-5" />
+
+            <button 
+              onClick={() => scroll('right')} 
+              className="p-2 rounded-full bg-slate-200 dark:bg-black hover:bg-[#E50914] hover:text-white transition-colors">
+              <ChevronRight className="w-5 h-5 text-slate-900 dark:text-white" />
             </button>
           </div>
         </div>

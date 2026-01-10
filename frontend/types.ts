@@ -25,3 +25,11 @@ export interface Venue {
   openAccess: boolean;
   matchScore: number;
 }
+
+export interface SearchResult {
+  id: string;
+  type: 'paper' | 'venue' | 'author';
+  title: string;
+  subtitle?: string;
+  url?: string;
+}
