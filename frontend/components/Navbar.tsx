@@ -1,10 +1,12 @@
 'use client';
 import Link from 'next/link';
-import { Search, Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
+import { useSearch } from './SearchProvider';
+import { Search, Moon, Sun } from 'lucide-react';
 
 export default function Navbar() {
   const [darkMode, setDarkMode] = useState(false);
+  const { openSearch } = useSearch();
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -25,13 +27,19 @@ export default function Navbar() {
 
       {/* Center/Right: Search */}
       <div className="hidden md:flex flex-1 max-w-md mx-8 relative">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search papers..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E50914] transition-colors"
-          />
+        <div
+          onClick={openSearch}
+          className="relative w-full group cursor-pointer"
+        >
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-hover:text-[#E50914] w-4 h-4 transition-colors duration-300" />
+          <div
+            className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full text-sm text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white group-hover:ring-2 group-hover:ring-[#E50914]/20 transition-all duration-300"
+          >
+            Search papers, authors, journals...
+          </div>
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 hidden group-hover:block transition-opacity duration-300">
+            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-bold text-slate-400 border border-slate-300 rounded-md bg-white ml-2">⌘K</kbd>
+          </div>
         </div>
       </div>
 

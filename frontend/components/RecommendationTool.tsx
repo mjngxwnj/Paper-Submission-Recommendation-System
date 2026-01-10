@@ -47,7 +47,7 @@ export const RecommendationTool = () => {
             <div className="flex items-center space-x-3">
               <Search className="w-6 h-6 text-[#E50914]" />
               <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
-                Find the right journals for your submissions
+                Find the right Conferences or Journals for your submissions
               </h2>
             </div>
             <button onClick={clearForm} className="text-sm text-gray-500 hover:text-[#E50914] underline">
@@ -118,7 +118,8 @@ export const RecommendationTool = () => {
                 )}
               </div>
             </div>
-
+            
+            {/* Upload file *(Future Feature) */}
             {/* Placeholder Space
             <div className="px-0 pb-0">
               <div className="h-32 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg flex items-center justify-center text-gray-400 text-sm bg-gray-50 dark:bg-slate-800/50">
@@ -145,7 +146,7 @@ export const RecommendationTool = () => {
         {results && (
           <div className="animate-fade-in">
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-              Here is the list of the most relevant journals for your submission:
+              Here is the list of the most relevant conferences and journals for your submission:
               <span className="text-sm font-normal text-gray-500 ml-2">({results.length} results)</span>
             </h3>
 
