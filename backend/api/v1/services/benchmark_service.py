@@ -7,33 +7,29 @@ class BenchmarkService:
   def __init__(self, db: Session):
     self.db = db
     
-  def get_random_test_set(self, percentage: float = 0.1) -> List[Paper]:
-    # 1. Filter valid papers
-    valid_papers = select(func.count()).select_from(Paper).where(
-      Paper.venue_id.isnot(None),
-      Paper.embedding.isnot(None)
-    )
-    
-    total = self.db.execute(valid_papers).scalar()
-    limit = int(total * percentage)
-    
-    print(f"Total papers: {total}. Fetching test set of {limit} papers...")
-    
-    # 2. Take random for testing
+  def get_test_set_by_doi(self, doi: list[str]) -> List[Paper]:
+    """
+    Load fixed test set by paper IDs (no randomness)
+    """
     query = (
       select(Paper)
-      .where(Paper.venue_id.isnot(None), Paper.embedding.isnot(None))
-      .order_by(func.random())
-      .limit(limit)
+      .where(
+        Paper.doi.in_(doi),
+        Paper.venue_id.isnot(None),
+        Paper.embedding.isnot(None)
+      )
     )
-    return self.db.execute(query).scalars().all()
+
+    papers = self.db.execute(query).scalars().all()
+    print(f"Loaded {len(papers)} papers for benchmark")
+    return papers
   
   def benchmark_search_hybrid(
     self, 
     vector_query: List[float], 
     keyword_query: str, 
-    exclude_doi: str, # to exclude itself
-    filter_top_k: int = 100, 
+    exclude_doi: str,
+    filter_top_k: int = 50, 
     rrf_k: int = 60, 
     limit: int = 10
 ) -> List[int]:
